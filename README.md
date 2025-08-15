@@ -1,4 +1,4 @@
-# 🚀 Warp Bypass - Complete Removal Tool
+# 🚀 Warp Bypass - Identity Reset & Complete Removal Tools
 
 <div align="center">
 
@@ -7,9 +7,9 @@
 ![License](https://img.shields.io/badge/license-MIT-blue.svg)
 ![Status](https://img.shields.io/badge/status-active-success.svg)
 
-**Cross-platform Python tool that completely removes Warp terminal, making your system appear as a new machine for fresh reinstalls**
+**Cross-platform Python tools for Warp terminal: Reset machine identity OR completely remove the app**
 
-[Features](#-features) • [Installation](#-quick-start) • [Usage](#-usage) • [How it Works](#-how-it-works) • [Contributing](#-contributing)
+[Tools](#-available-tools) • [Quick Start](#-quick-start) • [Usage](#-usage) • [How it Works](#-how-it-works) • [Contributing](#-contributing)
 
 </div>
 
@@ -17,14 +17,44 @@
 
 ## 🎯 What is This?
 
-**Warp Bypass** is a powerful cross-platform removal tool that completely eliminates all traces of Warp terminal from your system. When you reinstall Warp, your machine will appear completely fresh and new.
+**Warp Bypass** provides two powerful cross-platform tools to reset your Warp terminal identity:
 
-### ⚡ Why Use This Tool?
+1. **🆆 Identity Reset** - Keeps app installed, resets machine identity
+2. **🗑️ Complete Removal** - Completely removes app and all traces
+
+## 🛠️ Available Tools
+
+### 🆆 `warp_id_reset.py` - Identity Reset (Recommended)
+**Perfect for bypassing machine limitations while keeping your app!**
+
+- ✅ **Keeps Warp installed** - No need to reinstall
+- 🆆 **Resets machine identity** - Appear as a new user/machine
+- 📋 **Clears user data** - Fresh start with existing installation
+- ⚡ **Fast & convenient** - Ready to use immediately after reset
+
+### 🗑️ `warp_remover.py` - Complete Removal
+**For when you want to completely start over from scratch**
+
+- 🗑️ **Removes entire app** - Complete uninstallation
+- 🧹 **Deep system cleanup** - Removes all traces
+- 🆆 **Fresh machine identity** - Complete reset for reinstalls
+- 🔄 **Requires reinstallation** - Need to download and install again
+
+### ⚡ Which Tool Should You Use?
+
+| Scenario | Recommended Tool | Why |
+|----------|------------------|-----|
+| **Bypass machine limits** | 🆆 Identity Reset | Keeps app, just resets identity |
+| **Fix app issues** | 🆆 Identity Reset | Fresh start without reinstalling |
+| **Clean slate reinstall** | 🗑️ Complete Removal | Removes everything for fresh install |
+| **Troubleshooting** | 🆆 Identity Reset | Faster, easier recovery |
+
+### ⚡ Why Use These Tools?
 
 - **Reset machine identity** - Bypass any device-specific limitations
-- **Clean slate installation** - Remove all configuration remnants 
+- **Clean slate experience** - Remove problematic configurations
 - **Cross-platform compatibility** - Works identically on macOS and Windows
-- **Complete cleanup** - Goes beyond standard uninstallers
+- **Safe operation** - Smart error handling and user confirmations
 
 ## ✨ Features
 
@@ -51,39 +81,101 @@
 ```bash
 git clone https://github.com/black12-ag/warp-bypass.git
 cd warp-bypass
-python3 warp_remover.py  # macOS
-python warp_remover.py   # Windows
+
+# Identity Reset (Recommended)
+python3 warp_id_reset.py   # macOS
+python warp_id_reset.py    # Windows
+
+# OR Complete Removal
+python3 warp_remover.py    # macOS  
+python warp_remover.py     # Windows
 ```
 
 #### Option 2: Direct Download
-1. Download [`warp_remover.py`](warp_remover.py)
+1. Download the tool you need:
+   - [`warp_id_reset.py`](warp_id_reset.py) - Identity reset (keeps app)
+   - [`warp_remover.py`](warp_remover.py) - Complete removal
 2. Run in terminal/command prompt
 
 ## 🛠️ Usage
 
-### On macOS:
+### 🆆 Identity Reset Tool (Recommended)
+
+**macOS:**
+```bash
+# Make executable (optional)
+chmod +x warp_id_reset.py
+
+# Reset identity - keeps Warp installed
+python3 warp_id_reset.py
+# or
+./warp_id_reset.py
+```
+
+**Windows:**
+```cmd
+# For complete reset, run as Administrator (recommended)
+# Right-click Command Prompt/PowerShell → "Run as Administrator"
+
+# Reset identity - keeps Warp installed
+python warp_id_reset.py
+```
+
+### 🗑️ Complete Removal Tool
+
+**macOS:**
 ```bash
 # Make executable (optional)
 chmod +x warp_remover.py
 
-# Run the tool
+# Complete removal
 python3 warp_remover.py
 # or
 ./warp_remover.py
 ```
 
-### On Windows:
+**Windows:**
 ```cmd
 # For complete removal, run as Administrator:
 # Right-click Command Prompt/PowerShell → "Run as Administrator"
 
-# Run the tool
+# Complete removal
 python warp_remover.py
 ```
 
-## 📖 How It Works
+## 📚 How It Works
 
-### macOS Removal:
+### 🆆 Identity Reset Process (Recommended)
+
+**macOS Identity Reset:**
+1. 🔄 Stops Warp processes (keeps app installed)
+2. 🔑 Clears user identity data from:
+   - `~/Library/Application Support/*warp*` - User data & machine ID
+   - `~/Library/Preferences/*warp*` - User preferences & settings
+   - `~/Library/Caches/*warp*` - Temporary cache files
+   - `~/Library/Logs/*warp*` - Log files with machine info
+   - `~/Library/WebKit/*warp*` - Browser data & fingerprints
+   - `~/Library/Saved Application State/*warp*` - Session info
+   - `~/Library/HTTPStorages/*warp*` - HTTP storage & tokens
+3. 📊 Updates Launch Services database
+4. ✅ Verifies app is still installed
+5. 🆆 Ready to launch with fresh identity!
+
+**Windows Identity Reset:**
+1. 🔄 Stops Warp processes (keeps app installed)
+2. 🔑 Clears user identity data from:
+   - `%LOCALAPPDATA%/*warp*` - User data & machine ID
+   - `%APPDATA%/*warp*` - Roaming user settings
+   - `%TEMP%/*warp*` - Temporary files with machine info
+3. 🔑 Cleans user-specific registry entries
+4. ✅ Verifies app is still installed
+5. 🆆 Ready to launch with fresh identity!
+
+---
+
+### 🗑️ Complete Removal Process
+
+**macOS Removal:**
 1. 🔫 Kills all Warp processes using `pkill`
 2. 🗑️ Removes `/Applications/Warp.app`
 3. 📁 Cleans all user data from:
@@ -98,7 +190,7 @@ python warp_remover.py
 4. 📊 Clears Launch Services database
 5. 🔍 Verifies complete removal
 
-### Windows Removal:
+**Windows Removal:**
 1. 🔫 Kills all Warp processes using `taskkill`
 2. 🗑️ Removes application from Program Files
 3. 📁 Cleans all user data from:
