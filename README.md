@@ -2,10 +2,22 @@
 
 <div align="center">
 
-![Python](https://img.shields.io/badge/python-3.6+-blue.svg)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green.svg)
-![License](https://img.shields.io/badge/license-MIT-blue.svg)
-![Status](https://img.shields.io/badge/status-active-success.svg)
+<!-- Main Project Badges -->
+![Python](https://img.shields.io/badge/python-3.6+-blue.svg?style=for-the-badge&logo=python)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green.svg?style=for-the-badge)
+![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)
+![Status](https://img.shields.io/badge/status-active-success.svg?style=for-the-badge)
+
+<!-- Live GitHub Stats -->
+![GitHub stars](https://img.shields.io/github/stars/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=gold)
+![GitHub forks](https://img.shields.io/github/forks/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=blue)
+![GitHub issues](https://img.shields.io/github/issues/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=red)
+![GitHub downloads](https://img.shields.io/github/downloads/black12-ag/warp-bypass/total?style=for-the-badge&logo=github&color=brightgreen)
+
+<!-- Real-time Analytics -->
+[![Repository Views](https://komarev.com/ghpvc/?username=black12-ag&repository=warp-bypass&color=brightgreen&style=for-the-badge&label=VIEWS)](https://github.com/black12-ag/warp-bypass)
+![Last Updated](https://img.shields.io/github/last-commit/black12-ag/warp-bypass?style=for-the-badge&logo=github&label=UPDATED)
+![Commit Activity](https://img.shields.io/github/commit-activity/m/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=orange&label=COMMITS%2FMONTH)
 
 **Cross-platform Python tools for Warp terminal: Reset machine identity OR completely remove the app**
 
@@ -461,12 +473,100 @@ If you encounter issues:
    - Error message (if any)
    - Steps to reproduce
 
-## 📊 Repository Stats
+## 📊 Repository Analytics & Stats
 
-![GitHub stars](https://img.shields.io/github/stars/black12-ag/warp-bypass?style=social)
-![GitHub forks](https://img.shields.io/github/forks/black12-ag/warp-bypass?style=social)
-![GitHub issues](https://img.shields.io/github/issues/black12-ag/warp-bypass)
-![GitHub pull requests](https://img.shields.io/github/issues-pr/black12-ag/warp-bypass)
+### 🏆 GitHub Performance Metrics
+
+<div align="center">
+
+<!-- Stars and Social Stats -->
+![GitHub stars](https://img.shields.io/github/stars/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=yellow)
+![GitHub forks](https://img.shields.io/github/forks/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=blue)
+![GitHub watchers](https://img.shields.io/github/watchers/black12-ag/warp-bypass?style=for-the-badge&logo=github&color=green)
+
+<!-- Repository Activity -->
+![GitHub issues](https://img.shields.io/github/issues/black12-ag/warp-bypass?style=for-the-badge&logo=github)
+![GitHub pull requests](https://img.shields.io/github/issues-pr/black12-ag/warp-bypass?style=for-the-badge&logo=github)
+![GitHub contributors](https://img.shields.io/github/contributors/black12-ag/warp-bypass?style=for-the-badge&logo=github)
+
+<!-- Code Quality -->
+![GitHub repo size](https://img.shields.io/github/repo-size/black12-ag/warp-bypass?style=for-the-badge&logo=github)
+![GitHub code size](https://img.shields.io/github/languages/code-size/black12-ag/warp-bypass?style=for-the-badge&logo=python)
+![Lines of code](https://img.shields.io/tokei/lines/github/black12-ag/warp-bypass?style=for-the-badge&logo=python)
+
+<!-- Download Stats -->
+![GitHub all releases](https://img.shields.io/github/downloads/black12-ag/warp-bypass/total?style=for-the-badge&logo=github&color=brightgreen)
+![GitHub release](https://img.shields.io/github/v/release/black12-ag/warp-bypass?style=for-the-badge&logo=github)
+![GitHub commits since latest release](https://img.shields.io/github/commits-since/black12-ag/warp-bypass/latest?style=for-the-badge&logo=github)
+
+</div>
+
+### 📊 Live Analytics Dashboard
+
+<div align="center">
+
+<!-- GitHub Traffic Stats -->
+[![GitHub Views](https://komarev.com/ghpvc/?username=black12-ag&repository=warp-bypass&color=brightgreen&style=for-the-badge&label=REPOSITORY+VIEWS)](https://github.com/black12-ag/warp-bypass)
+
+<!-- Advanced GitHub Stats -->
+![GitHub commit activity](https://img.shields.io/github/commit-activity/m/black12-ag/warp-bypass?style=for-the-badge&logo=github&label=COMMITS%2FMONTH)
+![GitHub last commit](https://img.shields.io/github/last-commit/black12-ag/warp-bypass?style=for-the-badge&logo=github&label=LAST%20UPDATE)
+
+</div>
+
+### 📈 Contribution Activity Chart
+
+<div align="center">
+
+![Contributor Activity](https://contrib.rocks/image?repo=black12-ag/warp-bypass)
+
+**Contributors Graph**
+![GitHub Contributor Graph](https://github.com/black12-ag/warp-bypass/graphs/contributors)
+
+</div>
+
+### 🌐 Language & Code Statistics
+
+<div align="center">
+
+<!-- Language Breakdown -->
+![Top Languages](https://img.shields.io/github/languages/top/black12-ag/warp-bypass?style=for-the-badge&logo=python)
+![Language Count](https://img.shields.io/github/languages/count/black12-ag/warp-bypass?style=for-the-badge&logo=github)
+
+<!-- GitHub Language Stats Chart -->
+```mermaid
+pie title Repository Language Distribution
+    "Python" : 85
+    "Shell" : 10
+    "Markdown" : 5
+```
+
+</div>
+
+### 📅 Repository Timeline
+
+<div align="center">
+
+```mermaid
+gitgraph
+    commit id: "Initial Release"
+    commit id: "Identity Reset Tool"
+    commit id: "WARP MUNIR Branding"
+    commit id: "Visual Charts"
+    commit id: "Analytics Dashboard"
+```
+
+</div>
+
+### 🏅 Achievement Badges
+
+<div align="center">
+
+![Profile Views](https://komarev.com/ghpvc/?username=black12-ag&color=blue&style=for-the-badge&label=PROFILE+VIEWS)
+![Followers](https://img.shields.io/github/followers/black12-ag?style=for-the-badge&logo=github&color=orange&label=FOLLOWERS)
+![Public Repos](https://img.shields.io/badge/dynamic/json?logo=github&style=for-the-badge&color=brightgreen&label=PUBLIC%20REPOS&query=%24.public_repos&url=https%3A%2F%2Fapi.github.com%2Fusers%2Fblack12-ag)
+
+</div>
 
 ---
 
