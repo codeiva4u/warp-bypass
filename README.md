@@ -49,6 +49,80 @@
 | **Clean slate reinstall** | 🗑️ Complete Removal | Removes everything for fresh install |
 | **Troubleshooting** | 🆆 Identity Reset | Faster, easier recovery |
 
+## 📊 Tools Comparison Chart
+
+<div align="center">
+
+```mermaid
+graph TB
+    A[🚀 WARP MUNIR TOOLS] --> B[🆆 Identity Reset]
+    A --> C[🗑️ Complete Removal]
+    
+    B --> D[✅ Keep App Installed]
+    B --> E[🔄 Reset Machine ID]
+    B --> F[📋 Clear User Data]
+    B --> G[⚡ Quick & Easy]
+    
+    C --> H[🗑️ Remove Application]
+    C --> I[🧹 Deep System Clean]
+    C --> J[💾 Delete All Data]
+    C --> K[🔄 Requires Reinstall]
+    
+    style A fill:#4CAF50,stroke:#333,stroke-width:3px,color:#fff
+    style B fill:#2196F3,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#FF5722,stroke:#333,stroke-width:2px,color:#fff
+    style D fill:#E8F5E8,stroke:#4CAF50,stroke-width:2px
+    style E fill:#E8F5E8,stroke:#4CAF50,stroke-width:2px
+    style F fill:#E8F5E8,stroke:#4CAF50,stroke-width:2px
+    style G fill:#E8F5E8,stroke:#4CAF50,stroke-width:2px
+    style H fill:#FFEBE9,stroke:#FF5722,stroke-width:2px
+    style I fill:#FFEBE9,stroke:#FF5722,stroke-width:2px
+    style J fill:#FFEBE9,stroke:#FF5722,stroke-width:2px
+    style K fill:#FFEBE9,stroke:#FF5722,stroke-width:2px
+```
+
+</div>
+
+### 🎯 Visual Feature Comparison
+
+<table align="center">
+<tr>
+<th>Feature</th>
+<th>🆆 Identity Reset</th>
+<th>🗑️ Complete Removal</th>
+</tr>
+<tr>
+<td><strong>🏗️ App Installation</strong></td>
+<td>✅ <strong>Preserved</strong></td>
+<td>❌ <strong>Removed</strong></td>
+</tr>
+<tr>
+<td><strong>⚡ Speed</strong></td>
+<td>🚀 <strong>Fast</strong> (30-60 sec)</td>
+<td>🐌 <strong>Moderate</strong> (2-5 min)</td>
+</tr>
+<tr>
+<td><strong>💾 User Data</strong></td>
+<td>🧹 <strong>Cleared</strong></td>
+<td>🗑️ <strong>Deleted</strong></td>
+</tr>
+<tr>
+<td><strong>🆔 Machine Identity</strong></td>
+<td>🔄 <strong>Reset</strong></td>
+<td>🔄 <strong>Reset</strong></td>
+</tr>
+<tr>
+<td><strong>📱 Ready to Use</strong></td>
+<td>✅ <strong>Immediately</strong></td>
+<td>⬇️ <strong>After Reinstall</strong></td>
+</tr>
+<tr>
+<td><strong>🎯 Best For</strong></td>
+<td>🔧 <strong>Quick Fix</strong></td>
+<td>🆕 <strong>Fresh Start</strong></td>
+</tr>
+</table>
+
 ### ⚡ Why Use These Tools?
 
 - **Reset machine identity** - Bypass any device-specific limitations
@@ -57,6 +131,46 @@
 - **Safe operation** - Smart error handling and user confirmations
 
 ## ✨ Features
+
+### 🌍 Cross-Platform Support Matrix
+
+<div align="center">
+
+```mermaid
+graph LR
+    A[🚀 WARP MUNIR] --> B[🍎 macOS]
+    A --> C[🪟 Windows]
+    
+    B --> B1[🔄 Identity Reset]
+    B --> B2[🗑️ Complete Removal]
+    B1 --> B3[✅ Process Kill]
+    B1 --> B4[✅ Data Cleanup]
+    B1 --> B5[✅ LaunchServices]
+    B2 --> B6[✅ App Removal]
+    B2 --> B7[✅ Deep Clean]
+    B2 --> B8[✅ Verification]
+    
+    C --> C1[🔄 Identity Reset]
+    C --> C2[🗑️ Complete Removal]
+    C1 --> C3[✅ Process Kill]
+    C1 --> C4[✅ Data Cleanup]
+    C1 --> C5[✅ Registry Clean]
+    C2 --> C6[✅ App Removal]
+    C2 --> C7[✅ Deep Clean]
+    C2 --> C8[✅ Verification]
+    
+    style A fill:#4CAF50,stroke:#333,stroke-width:3px,color:#fff
+    style B fill:#007AFF,stroke:#333,stroke-width:2px,color:#fff
+    style C fill:#0078D4,stroke:#333,stroke-width:2px,color:#fff
+    style B1 fill:#E3F2FD,stroke:#2196F3,stroke-width:1px
+    style B2 fill:#FFEBEE,stroke:#F44336,stroke-width:1px
+    style C1 fill:#E3F2FD,stroke:#2196F3,stroke-width:1px
+    style C2 fill:#FFEBEE,stroke:#F44336,stroke-width:1px
+```
+
+</div>
+
+### 🛠️ Detailed Feature Matrix
 
 | Feature | macOS | Windows | Description |
 |---------|-------|---------|-------------|
@@ -144,6 +258,43 @@ python warp_remover.py
 ```
 
 ## 📚 How It Works
+
+### 🔄 Process Flow Diagram
+
+<div align="center">
+
+```mermaid
+flowchart TD
+    Start([Start Tool]) --> Check{Choose Tool}
+    Check -->|Identity Reset| IR[Identity Reset Process]
+    Check -->|Complete Removal| CR[Complete Removal Process]
+    
+    IR --> IR1[🔄 Stop Warp Processes]
+    IR1 --> IR2[🧹 Clear User Data]
+    IR2 --> IR3[🔑 Reset Machine Identity]
+    IR3 --> IR4[✅ Verify App Still Installed]
+    IR4 --> IR5[🎉 Ready to Launch!]
+    
+    CR --> CR1[🔫 Kill All Processes]
+    CR1 --> CR2[🗑️ Remove Application]
+    CR2 --> CR3[🧹 Deep System Cleanup]
+    CR3 --> CR4[📈 Clear Registry/DB]
+    CR4 --> CR5[🔍 Verify Complete Removal]
+    CR5 --> CR6[⬇️ Ready for Reinstall]
+    
+    IR5 --> End([Process Complete])
+    CR6 --> End
+    
+    style Start fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style End fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style Check fill:#FFC107,stroke:#333,stroke-width:2px
+    style IR fill:#2196F3,stroke:#333,stroke-width:2px,color:#fff
+    style CR fill:#FF5722,stroke:#333,stroke-width:2px,color:#fff
+    style IR5 fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+    style CR6 fill:#4CAF50,stroke:#333,stroke-width:2px,color:#fff
+```
+
+</div>
 
 ### 🆆 Identity Reset Process (Recommended)
 
