@@ -85,14 +85,14 @@ class WarpIdentityReset:
         self.print_emoji("🔄", "Stopping Warp processes for identity reset...")
         
         try:
-            if self.system == "Darwin":  # macOS
-                subprocess.run(["pkill", "-f", "-i", "warp"], 
-                             stderr=subprocess.DEVNULL, check=False)
+            if self.system in ("Darwin", "Linux"):  # macOS or Linux
+                subprocess.run(["pkill", "-f", "-i", "warp"],
+                               stderr=subprocess.DEVNULL, check=False)
             elif self.system == "Windows":
-                subprocess.run(["taskkill", "/F", "/IM", "warp.exe"], 
-                             stderr=subprocess.DEVNULL, check=False)
-                subprocess.run(["taskkill", "/F", "/IM", "Warp.exe"], 
-                             stderr=subprocess.DEVNULL, check=False)
+                subprocess.run(["taskkill", "/F", "/IM", "warp.exe"],
+                               stderr=subprocess.DEVNULL, check=False)
+                subprocess.run(["taskkill", "/F", "/IM", "Warp.exe"],
+                               stderr=subprocess.DEVNULL, check=False)
             
             time.sleep(2)  # Give processes time to terminate
             self.print_emoji("✅", "Warp processes stopped")
@@ -154,6 +154,49 @@ class WarpIdentityReset:
         except Exception as e:
             self.print_emoji("⚠️", f"Database update warning: {e}")
             
+    def reset_linux_identity(self):
+        """Reset Warp identity on Linux - keeps app installed"""
+        self.print_emoji("🐧", "Resetting Warp identity on Linux...")
+        
+        # XDG Base Directory paths
+        xdg_config = Path(os.environ.get('XDG_CONFIG_HOME', self.home / '.config'))
+        xdg_data = Path(os.environ.get('XDG_DATA_HOME', self.home / '.local/share'))
+        xdg_cache = Path(os.environ.get('XDG_CACHE_HOME', self.home / '.cache'))
+        xdg_state = Path(os.environ.get('XDG_STATE_HOME', self.home / '.local/state'))
+        
+        # User identity and session data
+        self.print_emoji("🔑", "Clearing user identity data...")
+        
+        # Configuration files
+        self.safe_remove(str(xdg_config / 'warp'), "config")
+        self.safe_remove(str(xdg_config / 'Warp'), "config")
+        self.safe_remove(str(self.home / '.warp'), "legacy config")
+        
+        # Application data
+        self.print_emoji("📁", "Clearing application data...")
+        self.safe_remove(str(xdg_data / 'warp'), "app data")
+        self.safe_remove(str(xdg_data / 'Warp'), "app data")
+        
+        # Cache files
+        self.print_emoji("🧹", "Clearing cache files...")
+        self.safe_remove(str(xdg_cache / 'warp'), "cache")
+        self.safe_remove(str(xdg_cache / 'Warp'), "cache")
+        
+        # State and logs
+        self.print_emoji("📋", "Clearing state and logs...")
+        self.safe_remove(str(xdg_state / 'warp'), "state")
+        self.safe_remove(str(xdg_state / 'warp' / 'logs'), "logs")
+        
+        # Temporary/runtime files
+        self.print_emoji("🗑️", "Clearing temporary/runtime files...")
+        try:
+            uid = os.getuid()
+        except AttributeError:
+            uid = None
+        if uid is not None:
+            self.safe_remove(f"/run/user/{uid}/warp", "runtime")
+        self.safe_remove(f"/tmp/warp-{os.getenv('USER', '*')}", "temp files")
+
     def reset_windows_identity(self):
         """Reset Warp identity on Windows - keeps app installed"""
         self.print_emoji("🪟", "Resetting Warp identity on Windows...")
@@ -235,6 +278,26 @@ class WarpIdentityReset:
                     
             if not app_exists:
                 self.print_emoji("❌", "Warp app not found - may not be installed")
+        elif self.system == "Linux":
+            # Try to find the 'warp' binary or installation directories
+            binary = shutil.which("warp")
+            possible_paths = [
+                Path("/opt/Warp"),
+                Path("/usr/local/bin/warp"),
+                Path("/usr/bin/warp"),
+                self.home / ".local" / "bin" / "warp",
+            ]
+            if binary:
+                app_exists = True
+                self.print_emoji("✅", f"Warp binary found: {binary}")
+            else:
+                for path in possible_paths:
+                    if Path(path).exists():
+                        app_exists = True
+                        self.print_emoji("✅", f"Warp found at: {path}")
+                        break
+            if not app_exists:
+                self.print_emoji("❌", "Warp app not found - may not be installed")
                 
         return app_exists
         
@@ -254,9 +317,11 @@ class WarpIdentityReset:
             self.reset_macos_identity()
         elif self.system == "Windows":
             self.reset_windows_identity()
+        elif self.system == "Linux":
+            self.reset_linux_identity()
         else:
             self.print_emoji("❌", f"Unsupported system: {self.system}")
-            self.print_emoji("💡", "This tool supports macOS and Windows only")
+            self.print_emoji("💡", "This tool supports macOS, Windows, and Linux")
             return False
             
         # Step 3: Verify app is still there

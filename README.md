@@ -10,7 +10,7 @@
 
 <!-- Platform Support -->
 ![Python](https://img.shields.io/badge/python-3.6+-blue.svg?style=for-the-badge&logo=python)
-![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows-green.svg?style=for-the-badge)
+![Platform](https://img.shields.io/badge/platform-macOS%20%7C%20Windows%20%7C%20Linux-green.svg?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-blue.svg?style=for-the-badge)
 
 **Cross-platform Python tools for Warp terminal: Reset machine identity OR completely remove the app**
@@ -67,11 +67,11 @@ git clone https://github.com/black12-ag/warp-bypass.git
 cd warp-bypass
 
 # Identity Reset (Recommended)
-python3 warp_id_reset.py   # macOS
+python3 warp_id_reset.py   # macOS/Linux
 python warp_id_reset.py    # Windows
 
 # Complete Removal
-python3 warp_remover.py    # macOS  
+python3 warp_remover.py    # macOS/Linux  
 python warp_remover.py     # Windows
 ```
 
@@ -93,13 +93,13 @@ python warp_remover.py     # Windows
 
 ## 🌍 Platform Support
 
-| Feature | macOS | Windows |
-|---------|-------|---------|
-| 🔫 Process Termination | ✅ | ✅ |
-| 🗑️ Application Removal | ✅ | ✅ |
-| 📁 Data Cleanup | ✅ | ✅ |
-| 📊 System DB Cleanup | ✅ | ✅ |
-| 🔍 Verification | ✅ | ✅ |
+| Feature | macOS | Windows | Linux |
+|---------|-------|---------|-------|
+| 🔫 Process Termination | ✅ | ✅ | ✅ |
+| 🗑️ Application Removal | ✅ | ✅ | ✅ |
+| 📁 Data Cleanup | ✅ | ✅ | ✅ |
+| 📊 System DB Cleanup | ✅ | ✅ | ✅ |
+| 🔍 Verification | ✅ | ✅ | ✅ |
 
 ## ⚠️ Important Notes
 
@@ -116,6 +116,7 @@ python warp_remover.py     # Windows
 
 **Permission errors:**
 - macOS: Run with `sudo python3 warp_remover.py`
+- Linux: Run with `sudo python3 warp_remover.py` if system paths are used
 - Windows: Run Command Prompt as Administrator
 
 ## 📈 Repository Stats

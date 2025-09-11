@@ -84,7 +84,7 @@ class WarpRemover:
         self.print_emoji("🔫", "Killing Warp processes...")
         
         try:
-            if self.system == "Darwin":  # macOS
+            if self.system in ("Darwin", "Linux"):  # macOS or Linux
                 subprocess.run(["pkill", "-f", "-i", "warp"], 
                              stderr=subprocess.DEVNULL, check=False)
             elif self.system == "Windows":
@@ -153,6 +153,60 @@ class WarpRemover:
         except Exception as e:
             self.print_emoji("⚠️", f"Launch Services warning: {e}")
             
+    def remove_linux_warp(self):
+        """Remove Warp from Linux"""
+        self.print_emoji("🐧", "Removing Warp from Linux...")
+        
+        # Main application (common manual install locations)
+        self.print_emoji("🗑️", "Removing main application (if present)...")
+        self.safe_remove("/opt/Warp")
+        self.safe_remove("/usr/local/bin/warp")
+        self.safe_remove("/usr/bin/warp")
+        self.safe_remove(str(self.home / ".local/bin/warp"))
+        
+        # User data and configuration (XDG base dirs)
+        self.print_emoji("📁", "Removing user data and configuration...")
+        xdg_config = Path(os.environ.get('XDG_CONFIG_HOME', self.home / '.config'))
+        xdg_data = Path(os.environ.get('XDG_DATA_HOME', self.home / '.local/share'))
+        xdg_cache = Path(os.environ.get('XDG_CACHE_HOME', self.home / '.cache'))
+        xdg_state = Path(os.environ.get('XDG_STATE_HOME', self.home / '.local/state'))
+        
+        # Configuration
+        self.safe_remove(str(xdg_config / 'warp'))
+        self.safe_remove(str(xdg_config / 'Warp'))
+        self.safe_remove(str(self.home / '.warp'))
+        
+        # Data
+        self.safe_remove(str(xdg_data / 'warp'))
+        self.safe_remove(str(xdg_data / 'Warp'))
+        
+        # Cache
+        self.safe_remove(str(xdg_cache / 'warp'))
+        self.safe_remove(str(xdg_cache / 'Warp'))
+        
+        # Logs/State
+        self.safe_remove(str(xdg_state / 'warp'))
+        
+        # Desktop entries
+        self.print_emoji("🗂️", "Removing desktop entries...")
+        self.safe_remove(str(self.home / ".local/share/applications/warp.desktop"))
+        self.safe_remove("/usr/share/applications/warp.desktop")
+        
+        # Runtime/temp
+        try:
+            uid = os.getuid()
+        except AttributeError:
+            uid = None
+        if uid is not None:
+            self.safe_remove(f"/run/user/{uid}/warp")
+        self.safe_remove(f"/tmp/warp-{os.getenv('USER', '*')}")
+        
+        # Note: If installed via package manager, removal may require:
+        #  - Snap: 'sudo snap remove warp'
+        #  - Flatpak: 'flatpak uninstall dev.warp.Warp'
+        #  - DEB/RPM: 'sudo apt/dnf/yum remove warp'
+        # We don't run these automatically to avoid requiring root.
+
     def remove_windows_warp(self):
         """Remove Warp from Windows"""
         self.print_emoji("🪟", "Removing Warp from Windows...")
@@ -230,6 +284,19 @@ class WarpRemover:
                 str(Path(os.environ.get('PROGRAMFILES', 'C:/Program Files'))),
                 str(Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)')))
             ]
+        elif self.system == "Linux":
+            search_paths = [
+                str(self.home / ".config"),
+                str(self.home / ".local/share"),
+                str(self.home / ".cache"),
+                str(self.home / ".local/state"),
+                "/opt",
+                "/usr/local/bin",
+                "/usr/bin",
+                str(self.home / ".local/bin"),
+                str(self.home / ".local/share/applications"),
+                "/usr/share/applications",
+            ]
             
         remaining_items = 0
         for search_path in search_paths:
@@ -260,9 +327,11 @@ class WarpRemover:
             self.remove_macos_warp()
         elif self.system == "Windows":
             self.remove_windows_warp()
+        elif self.system == "Linux":
+            self.remove_linux_warp()
         else:
             self.print_emoji("❌", f"Unsupported system: {self.system}")
-            self.print_emoji("💡", "This tool supports macOS and Windows only")
+            self.print_emoji("💡", "This tool supports macOS, Windows, and Linux")
             return False
             
         # Step 3: Verification
