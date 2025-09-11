@@ -75,6 +75,74 @@ python3 warp_remover.py    # macOS/Linux
 python warp_remover.py     # Windows
 ```
 
+## 🐧 Linux Users - Standalone Scripts
+
+### Quick One-Liner Commands
+
+**Identity Reset (keep app installed):**
+```bash
+# Download and run identity reset
+curl -sSL https://raw.githubusercontent.com/black12-ag/warp-bypass/main/linux_reset.sh | bash
+
+# Or with wget
+wget -qO- https://raw.githubusercontent.com/black12-ag/warp-bypass/main/linux_reset.sh | bash
+```
+
+**Complete Removal:**
+```bash
+# Download and run complete removal
+curl -sSL https://raw.githubusercontent.com/black12-ag/warp-bypass/main/linux_remove.sh | bash
+
+# Or with wget
+wget -qO- https://raw.githubusercontent.com/black12-ag/warp-bypass/main/linux_remove.sh | bash
+```
+
+### Manual Method
+
+```bash
+# Clone the repository
+git clone https://github.com/black12-ag/warp-bypass.git
+cd warp-bypass
+
+# Make scripts executable
+chmod +x linux_reset.sh linux_remove.sh
+
+# Run identity reset (keeps Warp installed)
+./linux_reset.sh
+
+# OR run complete removal
+./linux_remove.sh
+```
+
+### What the Linux Scripts Do
+
+**🔄 linux_reset.sh (Identity Reset)**
+- Kills Warp processes
+- Clears `~/.config/warp` (configuration)
+- Clears `~/.local/share/warp` (application data)
+- Clears `~/.cache/warp` (cache files)
+- Clears `~/.local/state/warp` (state/logs)
+- Removes temporary files in `/tmp` and `/run/user`
+- Verifies Warp is still installed
+
+**🗑️ linux_remove.sh (Complete Removal)**
+- Everything from identity reset PLUS:
+- Removes Warp from `/opt/Warp`, `/usr/local/bin`, `/usr/bin`
+- Removes desktop entries
+- Checks for package manager installations (Snap, Flatpak, APT, DNF/YUM)
+- Verifies complete removal
+
+### Linux File Locations
+
+| Type | Location | Description |
+|------|----------|-------------|
+| **Config** | `~/.config/warp` | User preferences and settings |
+| **Data** | `~/.local/share/warp` | Application data |
+| **Cache** | `~/.cache/warp` | Temporary cache files |
+| **State** | `~/.local/state/warp` | Runtime state and logs |
+| **Binary** | `/opt/Warp` or `/usr/local/bin/warp` | Application installation |
+| **Desktop** | `~/.local/share/applications/warp.desktop` | Desktop entry |
+
 ## 📚 How It Works
 
 ### 🔄 Identity Reset Process
@@ -116,8 +184,17 @@ python warp_remover.py     # Windows
 
 **Permission errors:**
 - macOS: Run with `sudo python3 warp_remover.py`
-- Linux: Run with `sudo python3 warp_remover.py` if system paths are used
+- Linux: Run with `sudo ./linux_remove.sh` or `sudo python3 warp_remover.py`
 - Windows: Run Command Prompt as Administrator
+
+**Linux-specific notes:**
+- The bash scripts (`linux_reset.sh`, `linux_remove.sh`) are Linux-only
+- Python scripts work cross-platform
+- If Warp was installed via package manager, uninstall with:
+  - Snap: `sudo snap remove warp`
+  - Flatpak: `flatpak uninstall dev.warp.Warp`
+  - APT: `sudo apt remove warp`
+  - DNF/YUM: `sudo dnf/yum remove warp`
 
 ## 📈 Repository Stats
 
