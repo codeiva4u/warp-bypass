@@ -229,28 +229,25 @@ class WarpRemover:
         self.print_emoji("🗑️", "Removing main application...")
         self.safe_remove(program_files / "Warp")
         self.safe_remove(program_files_x86 / "Warp")
-        
+        self.safe_remove(local_appdata / "Warp")
+
         # User data and configuration
         self.print_emoji("📁", "Removing user data and configuration...")
-        
-        # AppData Local
-        self.safe_remove(str(local_appdata / "*warp*"))
-        self.safe_remove(str(local_appdata / "*Warp*"))
-        
-        # AppData Roaming
-        self.safe_remove(str(appdata / "*warp*"))
-        self.safe_remove(str(appdata / "*Warp*"))
-        
+        self.safe_remove(str(local_appdata / 'dev.warp.Warp-stable'))
+        self.safe_remove(str(appdata / 'dev.warp.Warp-stable'))
+        self.safe_remove(str(local_appdata / 'Warp'))
+        self.safe_remove(str(appdata / 'Warp'))
+
         # Temp files
+        self.print_emoji("🧹", "Clearing temporary files...")
         temp_dir = Path(os.environ.get('TEMP', 'C:/Windows/Temp'))
-        self.safe_remove(str(temp_dir / "*warp*"))
-        self.safe_remove(str(temp_dir / "*Warp*"))
-        
-        # Downloads
-        downloads_dir = self.home / "Downloads"
-        self.safe_remove(str(downloads_dir / "*warp*"))
-        self.safe_remove(str(downloads_dir / "*Warp*"))
-        
+        self.safe_remove(str(temp_dir / "*WarpSetup.exe"), "temp files")
+
+        # Start Menu link
+        self.print_emoji("🔗", "Removing Start Menu link...")
+        start_menu = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming'))) / "Microsoft/Windows/Start Menu/Programs"
+        self.safe_remove(str(start_menu / "Warp.lnk"))
+
         # Registry cleanup (requires admin privileges)
         self.print_emoji("📊", "Attempting registry cleanup...")
         try:
@@ -259,7 +256,10 @@ class WarpRemover:
             registry_paths = [
                 (winreg.HKEY_CURRENT_USER, "Software\\Warp"),
                 (winreg.HKEY_LOCAL_MACHINE, "Software\\Warp"),
+                (winreg.HKEY_CURRENT_USER, "Software\\dev.warp.Warp-stable"),
+                (winreg.HKEY_LOCAL_MACHINE, "Software\\dev.warp.Warp-stable"),
                 (winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Warp"),
+                (winreg.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Warp"),
             ]
             
             for root, subkey in registry_paths:
@@ -316,9 +316,13 @@ class WarpRemover:
                 try:
                     for root, dirs, files in os.walk(search_path):
                         for item in dirs + files:
-                            if 'warp' in item.lower():
-                                remaining_items += 1
-                                self.print_emoji("👀", f"Found: {os.path.join(root, item)}")
+                            path_parts = Path(root).parts + (item,)
+                            if any('warp' in part.lower() for part in path_parts):
+                                full_path = os.path.join(root, item)
+                                # Exclude common false positives
+                                if not any(fp in full_path.lower() for fp in ['skimage', 'python', 'hp', 'google', 'chrome']):
+                                    remaining_items += 1
+                                    self.print_emoji("👀", f"Found: {full_path}")
                 except (PermissionError, OSError):
                     pass  # Skip inaccessible directories
                     

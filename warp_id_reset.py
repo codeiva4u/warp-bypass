@@ -209,29 +209,26 @@ class WarpIdentityReset:
         """Reset Warp identity on Windows - keeps app installed"""
         self.print_emoji("🪟", "Resetting Warp identity on Windows...")
         
-        # Note: We DON'T remove Program Files installation - that stays!
-        
         local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
         appdata = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming')))
         
         # User identity and session data
         self.print_emoji("🔑", "Clearing user identity data...")
-        
-        # AppData Local - user data, settings, machine ID
-        self.safe_remove(str(local_appdata / "*warp*"), "user data")
-        self.safe_remove(str(local_appdata / "*Warp*"), "user data")
-        
-        # AppData Roaming - roaming user settings
-        self.print_emoji("⚙️", "Clearing roaming preferences...")
-        self.safe_remove(str(appdata / "*warp*"), "preferences")
-        self.safe_remove(str(appdata / "*Warp*"), "preferences")
-        
-        # Temp files - temporary files that might contain machine info
+        self.safe_remove(str(local_appdata / 'dev.warp.Warp-stable'), "user data")
+        self.safe_remove(str(appdata / 'dev.warp.Warp-stable'), "user data")
+        self.safe_remove(str(local_appdata / 'Warp'), "user data")
+        self.safe_remove(str(appdata / 'Warp'), "user data")
+
+        # Temp files
         self.print_emoji("🧹", "Clearing temporary files...")
         temp_dir = Path(os.environ.get('TEMP', 'C:/Windows/Temp'))
-        self.safe_remove(str(temp_dir / "*warp*"), "temp files")
-        self.safe_remove(str(temp_dir / "*Warp*"), "temp files")
-        
+        self.safe_remove(str(temp_dir / "*WarpSetup.exe"), "temp files")
+
+        # Start Menu link
+        self.print_emoji("🔗", "Removing Start Menu link...")
+        start_menu = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming'))) / "Microsoft/Windows/Start Menu/Programs"
+        self.safe_remove(str(start_menu / "Warp.lnk"))
+
         # Registry cleanup - remove machine-specific registry entries
         self.print_emoji("📊", "Resetting registry entries...")
         try:
@@ -239,7 +236,7 @@ class WarpIdentityReset:
             # Clean up user-specific registry locations (not system-wide)
             registry_paths = [
                 (winreg.HKEY_CURRENT_USER, "Software\\Warp"),
-                # Note: We don't touch HKEY_LOCAL_MACHINE to preserve installation
+                (winreg.HKEY_CURRENT_USER, "Software\\dev.warp.Warp-stable"),
             ]
             
             for root, subkey in registry_paths:
@@ -266,6 +263,7 @@ class WarpIdentityReset:
         
         if self.system == "Darwin":  # macOS
             app_path = "/Applications/Warp.app"
+            self.print_emoji("ℹ️", f"Checking for Warp at: {app_path}")
             app_exists = os.path.exists(app_path)
             if app_exists:
                 self.print_emoji("✅", f"Warp app still installed: {app_path}")
@@ -276,13 +274,16 @@ class WarpIdentityReset:
             # Check common Windows installation paths
             program_files = Path(os.environ.get('PROGRAMFILES', 'C:/Program Files'))
             program_files_x86 = Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)'))
-            
+            local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
+
             possible_paths = [
-                program_files / "Warp",
-                program_files_x86 / "Warp",
+                program_files / "Warp/Warp.exe",
+                program_files_x86 / "Warp/Warp.exe",
+                local_appdata / "Warp/Warp.exe",
             ]
             
             for path in possible_paths:
+                self.print_emoji("ℹ️", f"Checking for Warp at: {path}")
                 if path.exists():
                     app_exists = True
                     self.print_emoji("✅", f"Warp app still installed: {path}")
