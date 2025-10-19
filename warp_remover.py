@@ -63,7 +63,11 @@ class WarpRemover:
     def safe_remove(self, path_pattern):
         """Safely remove files/directories matching pattern"""
         if isinstance(path_pattern, str):
-            paths = glob.glob(path_pattern)
+            try:
+                paths = glob.glob(path_pattern)
+            except Exception as e:
+                self.print_emoji("⚠️", f"Error during glob operation for {path_pattern}: {e}")
+                return
         else:
             paths = [str(path_pattern)] if path_pattern.exists() else []
             
@@ -76,8 +80,12 @@ class WarpRemover:
                     os.remove(path)
                     self.print_emoji("📄", f"Removed file: {path}")
                 self.removed_count += 1
-            except (OSError, PermissionError) as e:
-                self.print_emoji("⚠️", f"Couldn't remove {path}: {e}")
+            except PermissionError:
+                self.print_emoji("❌", f"Permission denied to remove {path}. Try running as administrator.")
+            except FileNotFoundError:
+                self.print_emoji("🤷", f"File not found to remove: {path}")
+            except OSError as e:
+                self.print_emoji("⚠️", f"Could not remove {path}: {e}")
                 
     def kill_warp_processes(self):
         """Kill all Warp processes (cross-platform)"""
@@ -258,8 +266,12 @@ class WarpRemover:
                 try:
                     winreg.DeleteKeyEx(root, subkey)
                     self.print_emoji("🔑", f"Removed registry key: {subkey}")
-                except WindowsError:
-                    pass  # Key doesn't exist or no permission
+                except FileNotFoundError:
+                    self.print_emoji("🤷", f"Registry key not found, skipping: {subkey}")
+                except PermissionError:
+                    self.print_emoji("❌", f"Permission denied to delete registry key: {subkey}")
+                except OSError as e:
+                    self.print_emoji("⚠️", f"Error deleting registry key {subkey}: {e}")
                     
         except ImportError:
             self.print_emoji("⚠️", "Registry cleanup requires Windows")
@@ -312,12 +324,25 @@ class WarpRemover:
                     
         return remaining_items
         
+    def is_admin(self):
+        """Check for admin privileges"""
+        try:
+            import ctypes
+            return ctypes.windll.shell32.IsUserAnAdmin() != 0
+        except Exception:
+            return False
+
     def run(self):
         """Main removal process"""
         print("=" * 60)
         self.print_emoji("🚀", "Starting Complete Warp Removal...")
         self.print_emoji("💻", f"Detected system: {self.system}")
         print("=" * 60)
+
+        if self.system == "Windows" and not self.is_admin():
+            self.print_emoji("❌", "This tool requires administrator privileges on Windows.")
+            self.print_emoji("💡", "Please re-run this script from a Command Prompt or PowerShell with 'Run as Administrator'.")
+            return False
         
         # Step 1: Kill processes
         self.kill_warp_processes()
