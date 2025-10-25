@@ -46,6 +46,9 @@ graph TB
     style C fill:#FF5722,stroke:#333,stroke-width:2px,color:#fff
 ```
 
+```
+```
+
 </div>
 
 | Feature | 🔄 Identity Reset | 🗑️ Complete Removal |
@@ -72,6 +75,14 @@ python warp_id_reset.py    # Windows
 
 # Complete Removal
 python3 warp_remover.py    # macOS/Linux  
+python warp_remover.py     # Windows
+```
+
+```
+python warp_id_reset.py    # Windows
+```
+
+```
 python warp_remover.py     # Windows
 ```
 
