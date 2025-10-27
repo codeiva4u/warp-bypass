@@ -79,11 +79,11 @@ python warp_remover.py     # Windows
 ```
 
 ```
-python warp_id_reset.py    # Windows
+python warp_remover.py     # Windows
 ```
 
 ```
-python warp_remover.py     # Windows
+python warp_id_reset.py    # Windows
 ```
 
 ## 🐧 Linux Users - Standalone Scripts
