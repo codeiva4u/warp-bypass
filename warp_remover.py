@@ -64,7 +64,7 @@ class WarpRemover:
         """Safely remove files/directories matching pattern"""
         if isinstance(path_pattern, str):
             try:
-                paths = glob.glob(path_pattern)
+                paths = glob.glob(path_pattern, recursive=True)
             except Exception as e:
                 self.print_emoji("⚠️", f"Error during glob operation for {path_pattern}: {e}")
                 return
@@ -86,6 +86,221 @@ class WarpRemover:
                 self.print_emoji("🤷", f"File not found to remove: {path}")
             except OSError as e:
                 self.print_emoji("⚠️", f"Could not remove {path}: {e}")
+                
+    def delete_registry_key_recursive(self, root, subkey):
+        """Recursively delete registry key and all subkeys (Windows only)"""
+        try:
+            import winreg
+            # Open the key
+            try:
+                key = winreg.OpenKey(root, subkey, 0, winreg.KEY_ALL_ACCESS)
+            except FileNotFoundError:
+                return  # Key doesn't exist
+            except PermissionError:
+                self.print_emoji("❌", f"Permission denied: {subkey}")
+                return
+                
+            # Get all subkeys
+            subkeys = []
+            try:
+                i = 0
+                while True:
+                    subkeys.append(winreg.EnumKey(key, i))
+                    i += 1
+            except OSError:
+                pass  # No more subkeys
+            
+            winreg.CloseKey(key)
+            
+            # Recursively delete all subkeys
+            for sk in subkeys:
+                self.delete_registry_key_recursive(root, f"{subkey}\\{sk}")
+            
+            # Delete the key itself
+            try:
+                winreg.DeleteKey(root, subkey)
+                self.print_emoji("🔑", f"Removed registry: {subkey}")
+                self.removed_count += 1
+            except Exception as e:
+                self.print_emoji("⚠️", f"Could not delete {subkey}: {e}")
+                
+        except ImportError:
+            pass  # Not Windows
+        except Exception as e:
+            self.print_emoji("⚠️", f"Registry error for {subkey}: {e}")
+            
+    def detect_custom_installation_paths(self):
+        """Detect custom Warp installation paths from registry"""
+        custom_paths = []
+        
+        if self.system != "Windows":
+            return custom_paths
+            
+        try:
+            import winreg
+            
+            # Check uninstall registry entries
+            uninstall_paths = [
+                (winreg.HKEY_LOCAL_MACHINE, r"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+                (winreg.HKEY_LOCAL_MACHINE, r"Software\WOW6432Node\Microsoft\Windows\CurrentVersion\Uninstall"),
+                (winreg.HKEY_CURRENT_USER, r"Software\Microsoft\Windows\CurrentVersion\Uninstall"),
+            ]
+            
+            for root, path in uninstall_paths:
+                try:
+                    key = winreg.OpenKey(root, path)
+                    i = 0
+                    while True:
+                        try:
+                            subkey_name = winreg.EnumKey(key, i)
+                            if 'warp' in subkey_name.lower():
+                                subkey = winreg.OpenKey(key, subkey_name)
+                                try:
+                                    install_location = winreg.QueryValueEx(subkey, "InstallLocation")[0]
+                                    if install_location and os.path.exists(install_location):
+                                        custom_paths.append(Path(install_location))
+                                except FileNotFoundError:
+                                    pass
+                                winreg.CloseKey(subkey)
+                            i += 1
+                        except OSError:
+                            break
+                    winreg.CloseKey(key)
+                except Exception:
+                    pass
+                    
+        except Exception as e:
+            self.print_emoji("⚠️", f"Custom path detection warning: {e}")
+            
+        return custom_paths
+        
+    def remove_windows_services(self):
+        """Remove Warp-related Windows services"""
+        if self.system != "Windows":
+            return
+            
+        self.print_emoji("🔧", "Checking for Warp services...")
+        
+        try:
+            # List all services and find Warp-related ones
+            result = subprocess.run(
+                ['sc', 'query', 'type=', 'service', 'state=', 'all'],
+                capture_output=True, text=True, check=False
+            )
+            
+            services_to_remove = []
+            for line in result.stdout.split('\n'):
+                if 'SERVICE_NAME' in line and 'warp' in line.lower():
+                    service_name = line.split(':')[1].strip()
+                    services_to_remove.append(service_name)
+            
+            # Stop and delete services
+            for service in services_to_remove:
+                self.print_emoji("🛑", f"Stopping service: {service}")
+                subprocess.run(['sc', 'stop', service], 
+                             stderr=subprocess.DEVNULL, check=False)
+                time.sleep(1)
+                
+                self.print_emoji("🗑️", f"Deleting service: {service}")
+                subprocess.run(['sc', 'delete', service], 
+                             stderr=subprocess.DEVNULL, check=False)
+                self.removed_count += 1
+                
+        except Exception as e:
+            self.print_emoji("⚠️", f"Service cleanup warning: {e}")
+            
+    def remove_scheduled_tasks(self):
+        """Remove Warp-related scheduled tasks"""
+        if self.system != "Windows":
+            return
+            
+        self.print_emoji("📅", "Checking for scheduled tasks...")
+        
+        try:
+            # List all scheduled tasks
+            result = subprocess.run(
+                ['schtasks', '/Query', '/FO', 'LIST'],
+                capture_output=True, text=True, check=False
+            )
+            
+            tasks_to_remove = []
+            for line in result.stdout.split('\n'):
+                if 'TaskName' in line and 'warp' in line.lower():
+                    task_name = line.split(':', 1)[1].strip()
+                    tasks_to_remove.append(task_name)
+            
+            # Delete tasks
+            for task in tasks_to_remove:
+                self.print_emoji("🗑️", f"Removing task: {task}")
+                subprocess.run(['schtasks', '/Delete', '/TN', task, '/F'],
+                             stderr=subprocess.DEVNULL, check=False)
+                self.removed_count += 1
+                
+        except Exception as e:
+            self.print_emoji("⚠️", f"Scheduled task cleanup warning: {e}")
+            
+    def get_browser_data_paths(self):
+        """Get browser data paths for all major browsers"""
+        browser_paths = {}
+        
+        if self.system == "Windows":
+            local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
+            appdata = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming')))
+            
+            browser_paths = {
+                'Chrome': local_appdata / 'Google/Chrome/User Data',
+                # 'Edge': local_appdata / 'Microsoft/Edge/User Data',  # Excluded by user request
+                'Firefox': appdata / 'Mozilla/Firefox/Profiles',
+                'Brave': local_appdata / 'BraveSoftware/Brave-Browser/User Data',
+                'Opera': appdata / 'Opera Software/Opera Stable',
+                'Vivaldi': local_appdata / 'Vivaldi/User Data',
+                'Ulaa': local_appdata / 'Ulaa/User Data',  # Added Ulaa browser support
+            }
+            
+        return browser_paths
+        
+    def clean_browser_data(self):
+        """Clean Warp-related data from all browsers"""
+        if self.system != "Windows":
+            return
+            
+        self.print_emoji("🌐", "Cleaning browser data...")
+        
+        browser_paths = self.get_browser_data_paths()
+        
+        for browser_name, browser_path in browser_paths.items():
+            if browser_path.exists():
+                try:
+                    # Clean cookies
+                    for cookie_file in browser_path.rglob('*Cookies*'):
+                        if cookie_file.is_file():
+                            try:
+                                # Note: Just flagging, actual cookie cleaning would need DB access
+                                self.print_emoji("🍪", f"Found {browser_name} cookies at: {cookie_file}")
+                            except Exception:
+                                pass
+                    
+                    # Clean local storage
+                    local_storage_patterns = [
+                        '**/Local Storage/**/*warp*',
+                        '**/IndexedDB/**/*warp*',
+                        '**/Session Storage/**/*warp*',
+                    ]
+                    
+                    for pattern in local_storage_patterns:
+                        for item in browser_path.glob(pattern):
+                            self.safe_remove(str(item))
+                            
+                    # Clean cache
+                    cache_paths = list(browser_path.rglob('*Cache*'))
+                    for cache_path in cache_paths:
+                        if cache_path.is_dir():
+                            warp_cache = list(cache_path.rglob('*warp*'))
+                            for warp_item in warp_cache:
+                                self.safe_remove(str(warp_item))
+                                
+                except Exception as e:
+                    self.print_emoji("⚠️", f"{browser_name} cleanup warning: {e}")
                 
     def kill_warp_processes(self):
         """Kill all Warp processes (cross-platform)"""
@@ -219,6 +434,11 @@ class WarpRemover:
         """Remove Warp from Windows"""
         self.print_emoji("🪟", "Removing Warp from Windows...")
         
+        # Detect custom installation paths
+        custom_paths = self.detect_custom_installation_paths()
+        if custom_paths:
+            self.print_emoji("🔍", f"Detected {len(custom_paths)} custom installation(s)")
+        
         # Common installation paths
         program_files = Path(os.environ.get('PROGRAMFILES', 'C:/Program Files'))
         program_files_x86 = Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)'))
@@ -230,6 +450,11 @@ class WarpRemover:
         self.safe_remove(program_files / "Warp")
         self.safe_remove(program_files_x86 / "Warp")
         self.safe_remove(local_appdata / "Warp")
+        
+        # Remove custom installations
+        for custom_path in custom_paths:
+            self.print_emoji("🗑️", f"Removing custom installation: {custom_path}")
+            self.safe_remove(custom_path)
 
         # User data and configuration
         self.print_emoji("📁", "Removing user data and configuration...")
@@ -238,18 +463,22 @@ class WarpRemover:
         self.safe_remove(str(local_appdata / 'Warp'))
         self.safe_remove(str(appdata / 'Warp'))
 
-        # Temp files
+        # Temp files (fixed wildcard pattern)
         self.print_emoji("🧹", "Clearing temporary files...")
         temp_dir = Path(os.environ.get('TEMP', 'C:/Windows/Temp'))
-        self.safe_remove(str(temp_dir / "*WarpSetup.exe"), "temp files")
+        # Use proper glob pattern
+        temp_warp_files = glob.glob(str(temp_dir / "*Warp*.exe"))
+        temp_warp_files.extend(glob.glob(str(temp_dir / "*warp*.exe")))
+        for temp_file in temp_warp_files:
+            self.safe_remove(temp_file)
 
         # Start Menu link
         self.print_emoji("🔗", "Removing Start Menu link...")
         start_menu = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming'))) / "Microsoft/Windows/Start Menu/Programs"
         self.safe_remove(str(start_menu / "Warp.lnk"))
 
-        # Registry cleanup (requires admin privileges)
-        self.print_emoji("📊", "Attempting registry cleanup...")
+        # Registry cleanup (requires admin privileges) - Now with recursive deletion
+        self.print_emoji("📊", "Attempting registry cleanup (recursive)...")
         try:
             import winreg
             # Clean up common registry locations
@@ -260,23 +489,25 @@ class WarpRemover:
                 (winreg.HKEY_LOCAL_MACHINE, "Software\\dev.warp.Warp-stable"),
                 (winreg.HKEY_CURRENT_USER, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Warp"),
                 (winreg.HKEY_LOCAL_MACHINE, "Software\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Warp"),
+                (winreg.HKEY_LOCAL_MACHINE, "Software\\WOW6432Node\\Microsoft\\Windows\\CurrentVersion\\Uninstall\\Warp"),
             ]
             
             for root, subkey in registry_paths:
-                try:
-                    winreg.DeleteKeyEx(root, subkey)
-                    self.print_emoji("🔑", f"Removed registry key: {subkey}")
-                except FileNotFoundError:
-                    self.print_emoji("🤷", f"Registry key not found, skipping: {subkey}")
-                except PermissionError:
-                    self.print_emoji("❌", f"Permission denied to delete registry key: {subkey}")
-                except OSError as e:
-                    self.print_emoji("⚠️", f"Error deleting registry key {subkey}: {e}")
+                self.delete_registry_key_recursive(root, subkey)
                     
         except ImportError:
             self.print_emoji("⚠️", "Registry cleanup requires Windows")
         except Exception as e:
             self.print_emoji("⚠️", f"Registry cleanup warning: {e}")
+            
+        # Remove Windows services
+        self.remove_windows_services()
+        
+        # Remove scheduled tasks
+        self.remove_scheduled_tasks()
+        
+        # Clean browser data
+        self.clean_browser_data()
             
     def verify_removal(self):
         """Verify that Warp has been completely removed"""
