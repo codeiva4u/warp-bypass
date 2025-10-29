@@ -73,39 +73,56 @@ git clone https://github.com/black12-ag/warp-bypass.git
 cd warp-bypass
 ```
 
+**🪟 Windows:** Open PowerShell/CMD as Administrator
+**🍎 macOS/🐧 Linux:** Open Terminal with sudo access
+
 #### **Step 2: Choose Your Tool**
 
+### 🪟 Windows Users
+
+**🔴 IMPORTANT: Run PowerShell or CMD as Administrator**
+- Right-click on PowerShell/CMD
+- Select "Run as Administrator"
+
 **Option A: 🔄 Identity Reset (Recommended)**
+```powershell
+# Windows - Run as Administrator
+python warp_id_reset.py
+```
 - ✅ Keeps Warp installed
-- ✅ Resets machine identity
+- ✅ Resets machine identity  
 - ✅ Ready to use immediately
 
-```bash
-# Windows (Run PowerShell/CMD as Administrator)
-python warp_id_reset.py
-
-# macOS (Run with sudo)
-sudo python3 warp_id_reset.py
-
-# Linux (Run with sudo)
-sudo python3 warp_id_reset.py
-```
-
 **Option B: 🗑️ Complete Removal**
+```powershell
+# Windows - Run as Administrator
+python warp_remover.py
+```
 - ❌ Removes Warp completely
 - ✅ Clean slate for reinstall
 - ⚠️ Need to reinstall Warp after
 
+---
+
+### 🍎 macOS / 🐧 Linux Users
+
+**Option A: 🔄 Identity Reset (Recommended)**
 ```bash
-# Windows (Run PowerShell/CMD as Administrator)
-python warp_remover.py
+# macOS/Linux - Run with sudo
+sudo python3 warp_id_reset.py
+```
+- ✅ Keeps Warp installed
+- ✅ Resets machine identity
+- ✅ Ready to use immediately
 
-# macOS (Run with sudo)
-sudo python3 warp_remover.py
-
-# Linux (Run with sudo)
+**Option B: 🗑️ Complete Removal**
+```bash
+# macOS/Linux - Run with sudo
 sudo python3 warp_remover.py
 ```
+- ❌ Removes Warp completely
+- ✅ Clean slate for reinstall
+- ⚠️ Need to reinstall Warp after
 
 #### **Step 3: Follow Prompts**
 - Confirm action when asked (y/N)
