@@ -9,7 +9,7 @@ while keeping all your app installations intact.
 
 Usage:
     python warp_id_reset.py
-    
+
 or make it executable:
     chmod +x warp_id_reset.py
     ./warp_id_reset.py
@@ -28,15 +28,15 @@ from pathlib import Path
 def show_banner():
     """Display simple banner with WARP over MUNIR"""
     print("\n" + "="*50)
-    print("""    
-██╗    ██╗█████╗ ██████╗ ██████╗ 
+    print("""
+██╗    ██╗█████╗ ██████╗ ██████╗
 ██║    ██║██╔══██╗██╔══██╗██╔══██╗
 ██░ █╗ ██║███████║██████╔╝██████╔╝
-██░███╗██║██╔══██║██╔══██╗██╔═══╝ 
-╚███╔███╔╝██║  ██║██║  ██║██║     
- ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝     
+██░███╗██║██╔══██║██╔══██╗██╔═══╝
+╚███╔███╔╝██║  ██║██║  ██║██║
+ ╚══╝╚══╝ ╚═╝  ╚═╝╚═╝  ╚═╝╚═╝
 
-███╗   ██╗██╗   ██╗███╗   ██╗██╗██████╗ 
+███╗   ██╗██╗   ██╗███╗   ██╗██╗██████╗
 ████╗ ████║██║   ██║████╗  ██║██║██╔══██╗
 ██╔████╔██║██║   ██║██╔██╗ ██║██║██████╔╝
 ██║╚██╔╝██║██║   ██║██║╚██╗██║██║██╔══██╗
@@ -56,11 +56,11 @@ class WarpIdentityReset:
         self.system = platform.system()
         self.home = Path.home()
         self.reset_count = 0
-        
+
     def print_emoji(self, emoji, message):
         """Print message with emoji (works cross-platform)"""
         print(f"{emoji} {message}")
-        
+
     def safe_remove(self, path_pattern, description=""):
         """Safely remove files/directories matching pattern"""
         if isinstance(path_pattern, str):
@@ -71,8 +71,25 @@ class WarpIdentityReset:
                 return
         else:
             paths = [str(path_pattern)] if path_pattern.exists() else []
-            
+
         for path in paths:
+            # SAFETY CHECK: Never delete main Warp installation directories!
+            path_lower = path.lower()
+            protected_paths = [
+                'program files\\warp\\warp.exe',
+                'program files (x86)\\warp\\warp.exe',
+                'local\\warp\\warp.exe',
+                '/applications/warp.app/contents/macos/warp',  # macOS
+                '/opt/warp',  # Linux
+                '/usr/bin/warp',  # Linux
+                '/usr/local/bin/warp',  # Linux
+            ]
+            
+            # Skip if this is a main installation path
+            if any(protected in path_lower for protected in protected_paths):
+                self.print_emoji("🚫", f"Skipping protected installation: {path}")
+                continue
+            
             try:
                 if os.path.isdir(path):
                     shutil.rmtree(path)
@@ -87,7 +104,7 @@ class WarpIdentityReset:
                 self.print_emoji("🤷", f"File not found to remove: {path}")
             except OSError as e:
                 self.print_emoji("⚠️", f"Could not remove {path}: {e}")
-                
+
     def delete_registry_key_recursive(self, root, subkey):
         """Recursively delete registry key and all subkeys (Windows only)"""
         try:
@@ -100,7 +117,7 @@ class WarpIdentityReset:
             except PermissionError:
                 self.print_emoji("❌", f"Permission denied: {subkey}")
                 return
-                
+
             # Get all subkeys
             subkeys = []
             try:
@@ -110,13 +127,13 @@ class WarpIdentityReset:
                     i += 1
             except OSError:
                 pass  # No more subkeys
-            
+
             winreg.CloseKey(key)
-            
+
             # Recursively delete all subkeys
             for sk in subkeys:
                 self.delete_registry_key_recursive(root, f"{subkey}\\{sk}")
-            
+
             # Delete the key itself
             try:
                 winreg.DeleteKey(root, subkey)
@@ -124,19 +141,19 @@ class WarpIdentityReset:
                 self.reset_count += 1
             except Exception as e:
                 self.print_emoji("⚠️", f"Could not delete {subkey}: {e}")
-                
+
         except ImportError:
             pass  # Not Windows
         except Exception as e:
             self.print_emoji("⚠️", f"Registry error for {subkey}: {e}")
-            
+
     def kill_browser_processes(self):
         """Kill all major browser processes to unlock files"""
         if self.system != "Windows":
             return
-            
+
         self.print_emoji("🚫", "Closing browsers to unlock files...")
-        
+
         browsers_to_kill = [
             'chrome.exe',
             'firefox.exe',
@@ -145,7 +162,7 @@ class WarpIdentityReset:
             'vivaldi.exe',
             'msedge.exe',
         ]
-        
+
         for browser in browsers_to_kill:
             try:
                 subprocess.run(['taskkill', '/F', '/IM', browser],
@@ -154,18 +171,18 @@ class WarpIdentityReset:
                              check=False)
             except:
                 pass
-        
+
         time.sleep(2)  # Give time for processes to close
         self.print_emoji("✅", "Browsers closed")
-    
+
     def get_browser_data_paths(self):
         """Get browser data paths for all major browsers"""
         browser_paths = {}
-        
+
         if self.system == "Windows":
             local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
             appdata = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming')))
-            
+
             browser_paths = {
                 'Chrome': local_appdata / 'Google/Chrome/User Data',
                 # 'Edge': local_appdata / 'Microsoft/Edge/User Data',  # Excluded by user request
@@ -175,43 +192,37 @@ class WarpIdentityReset:
                 'Vivaldi': local_appdata / 'Vivaldi/User Data',
                 'Ulaa': local_appdata / 'Ulaa/User Data',  # Added Ulaa browser support
             }
-            
+
         return browser_paths
-        
+
     def clean_browser_data(self):
-        """Clean Warp-related data from all browsers"""
+        """Clean ALL data from all browsers (COMPLETE CLEANUP)"""
         if self.system != "Windows":
             return
-            
-        self.print_emoji("🌐", "Cleaning browser data (Note: Close all browsers first!)...")
-        
+
+        self.print_emoji("🌐", "Cleaning ALL browser data (Complete wipe - browsers will be closed!)...")
+        self.print_emoji("⚠️", "WARNING: This will delete ALL cookies, cache, sessions, and storage from all browsers!")
+
         browser_paths = self.get_browser_data_paths()
-        
+
         for browser_name, browser_path in browser_paths.items():
             if not browser_path.exists():
                 continue
-                
-            self.print_emoji("🔍", f"Scanning {browser_name}...")
-            
+
+            self.print_emoji("🔍", f"Deep cleaning {browser_name}...")
+
             try:
-                # Method 1: Clean Local Storage (leveldb files)
-                local_storage_dirs = [
-                    'Default/Local Storage/leveldb',
-                    'Profile */Local Storage/leveldb',
+                # Method 1: Clean ALL Local Storage (complete deletion)
+                local_storage_patterns = [
+                    'Default/Local Storage',
+                    'Profile */Local Storage',
                 ]
-                for ls_pattern in local_storage_dirs:
+                for ls_pattern in local_storage_patterns:
                     for ls_dir in browser_path.glob(ls_pattern):
                         if ls_dir.is_dir():
-                            for warp_file in ls_dir.glob('*'):
-                                # Check if file contains 'warp' in content (for .log and .ldb files)
-                                if warp_file.is_file():
-                                    try:
-                                        if 'warp' in warp_file.name.lower():
-                                            self.safe_remove(str(warp_file), f"{browser_name} Local Storage")
-                                    except:
-                                        pass
-                
-                # Method 2: Clean IndexedDB
+                            self.safe_remove(str(ls_dir), f"{browser_name} Local Storage (ALL)")
+
+                # Method 2: Clean ALL IndexedDB
                 indexeddb_patterns = [
                     'Default/IndexedDB',
                     'Profile */IndexedDB',
@@ -219,12 +230,9 @@ class WarpIdentityReset:
                 for idb_pattern in indexeddb_patterns:
                     for idb_dir in browser_path.glob(idb_pattern):
                         if idb_dir.is_dir():
-                            # Look for warp-related databases
-                            for item in idb_dir.rglob('*'):
-                                if 'warp' in str(item).lower():
-                                    self.safe_remove(str(item), f"{browser_name} IndexedDB")
-                
-                # Method 3: Clean Session Storage
+                            self.safe_remove(str(idb_dir), f"{browser_name} IndexedDB (ALL)")
+
+                # Method 3: Clean ALL Session Storage
                 session_storage_patterns = [
                     'Default/Session Storage',
                     'Profile */Session Storage',
@@ -232,11 +240,9 @@ class WarpIdentityReset:
                 for ss_pattern in session_storage_patterns:
                     for ss_dir in browser_path.glob(ss_pattern):
                         if ss_dir.is_dir():
-                            for item in ss_dir.rglob('*'):
-                                if 'warp' in str(item).lower():
-                                    self.safe_remove(str(item), f"{browser_name} Session Storage")
-                
-                # Method 4: Clean Cache (all cache directories)
+                            self.safe_remove(str(ss_dir), f"{browser_name} Session Storage (ALL)")
+
+                # Method 4: Clean ALL Cache
                 cache_patterns = [
                     'Default/Cache',
                     'Default/Code Cache',
@@ -249,24 +255,23 @@ class WarpIdentityReset:
                 for cache_pattern in cache_patterns:
                     for cache_dir in browser_path.glob(cache_pattern):
                         if cache_dir.is_dir():
-                            for item in cache_dir.rglob('*warp*'):
-                                self.safe_remove(str(item), f"{browser_name} Cache")
-                
-                # Method 5: Clean Cookies (inside Cookies/Network files)
+                            self.safe_remove(str(cache_dir), f"{browser_name} Cache (ALL)")
+
+                # Method 5: Clean ALL Cookies
                 cookie_patterns = [
                     'Default/Cookies',
+                    'Default/Cookies-journal',
                     'Default/Network/Cookies',
                     'Profile */Cookies',
+                    'Profile */Cookies-journal',
                     'Profile */Network/Cookies',
                 ]
                 for cookie_pattern in cookie_patterns:
                     for cookie_file in browser_path.glob(cookie_pattern):
-                        if cookie_file.is_file():
-                            # Note: Can't selectively delete from SQLite DB while browser is running
-                            # Just flag it for user awareness
-                            self.print_emoji("🍪", f"Found {browser_name} cookies at: {cookie_file.name} (Close browser to clean)")
-                
-                # Method 6: Clean Service Workers
+                        if cookie_file.exists():
+                            self.safe_remove(str(cookie_file), f"{browser_name} Cookies (ALL)")
+
+                # Method 6: Clean ALL Service Workers
                 sw_patterns = [
                     'Default/Service Worker',
                     'Profile */Service Worker',
@@ -274,10 +279,40 @@ class WarpIdentityReset:
                 for sw_pattern in sw_patterns:
                     for sw_dir in browser_path.glob(sw_pattern):
                         if sw_dir.is_dir():
-                            for item in sw_dir.rglob('*warp*'):
-                                self.safe_remove(str(item), f"{browser_name} Service Worker")
-                
-                # Method 7: Clean Preferences (JSON files that might contain warp data)
+                            self.safe_remove(str(sw_dir), f"{browser_name} Service Worker (ALL)")
+
+                # Method 7: Clean History
+                history_patterns = [
+                    'Default/History',
+                    'Default/History-journal',
+                    'Profile */History',
+                    'Profile */History-journal',
+                ]
+                for history_pattern in history_patterns:
+                    for history_file in browser_path.glob(history_pattern):
+                        if history_file.exists():
+                            self.safe_remove(str(history_file), f"{browser_name} History (ALL)")
+
+                # Method 8: Clean Download History
+                download_patterns = [
+                    'Default/History',
+                    'Profile */History',
+                ]
+                # Already covered in History cleanup above
+
+                # Method 9: Clean Web Data (Autofill, etc.)
+                webdata_patterns = [
+                    'Default/Web Data',
+                    'Default/Web Data-journal',
+                    'Profile */Web Data',
+                    'Profile */Web Data-journal',
+                ]
+                for webdata_pattern in webdata_patterns:
+                    for webdata_file in browser_path.glob(webdata_pattern):
+                        if webdata_file.exists():
+                            self.safe_remove(str(webdata_file), f"{browser_name} Web Data (ALL)")
+
+                # Method 10: Clean Preferences (complete reset)
                 pref_patterns = [
                     'Default/Preferences',
                     'Profile */Preferences',
@@ -286,23 +321,42 @@ class WarpIdentityReset:
                 ]
                 for pref_pattern in pref_patterns:
                     for pref_file in browser_path.glob(pref_pattern):
-                        if pref_file.is_file():
-                            try:
-                                # Read and check if contains warp references
-                                with open(pref_file, 'r', encoding='utf-8', errors='ignore') as f:
-                                    content = f.read()
-                                    if 'warp' in content.lower():
-                                        self.print_emoji("⚙️", f"{browser_name}: Found warp in {pref_file.name} (needs manual edit or browser restart)")
-                            except:
-                                pass
-                                
+                        if pref_file.exists():
+                            self.safe_remove(str(pref_file), f"{browser_name} Preferences (ALL)")
+
+                # Method 11: Clean Sessions
+                session_patterns = [
+                    'Default/Sessions',
+                    'Profile */Sessions',
+                    'Default/Current Session',
+                    'Default/Current Tabs',
+                    'Profile */Current Session',
+                    'Profile */Current Tabs',
+                ]
+                for session_pattern in session_patterns:
+                    for session_item in browser_path.glob(session_pattern):
+                        if session_item.exists():
+                            self.safe_remove(str(session_item), f"{browser_name} Sessions (ALL)")
+
+                # Method 12: Clean Media Cache
+                media_cache_patterns = [
+                    'Default/Media Cache',
+                    'Profile */Media Cache',
+                ]
+                for media_pattern in media_cache_patterns:
+                    for media_dir in browser_path.glob(media_pattern):
+                        if media_dir.is_dir():
+                            self.safe_remove(str(media_dir), f"{browser_name} Media Cache (ALL)")
+
+                self.print_emoji("✅", f"{browser_name}: Complete data wipe finished")
+
             except Exception as e:
                 self.print_emoji("⚠️", f"{browser_name} cleanup warning: {e}")
-                
+
     def kill_warp_processes(self):
         """Kill all Warp processes to ensure clean reset"""
         self.print_emoji("🔄", "Stopping Warp processes for identity reset...")
-        
+
         try:
             if self.system in ("Darwin", "Linux"):  # macOS or Linux
                 subprocess.run(["pkill", "-f", "-i", "warp"],
@@ -312,100 +366,100 @@ class WarpIdentityReset:
                                stderr=subprocess.DEVNULL, check=False)
                 subprocess.run(["taskkill", "/F", "/IM", "Warp.exe"],
                                stderr=subprocess.DEVNULL, check=False)
-            
+
             time.sleep(2)  # Give processes time to terminate
             self.print_emoji("✅", "Warp processes stopped")
-            
+
         except Exception as e:
             self.print_emoji("⚠️", f"Process stop warning: {e}")
-            
+
     def reset_macos_identity(self):
         """Reset Warp identity on macOS - keeps app installed"""
         self.print_emoji("🍎", "Resetting Warp identity on macOS...")
-        
+
         # Note: We DON'T remove /Applications/Warp.app - that stays!
-        
+
         # User identity and session data
         self.print_emoji("🔑", "Clearing user identity data...")
-        
+
         # Application Support - user data, settings, machine ID
         self.safe_remove(str(self.home / "Library/Application Support/*warp*"), "user data")
         self.safe_remove(str(self.home / "Library/Application Support/*Warp*"), "user data")
-        
+
         # Preferences - user preferences and machine-specific settings
         self.print_emoji("⚙️", "Clearing preferences and settings...")
         self.safe_remove(str(self.home / "Library/Preferences/*warp*"), "preferences")
         self.safe_remove(str(self.home / "Library/Preferences/*Warp*"), "preferences")
-        
+
         # Caches - temporary files that might contain machine info
         self.print_emoji("🧹", "Clearing cache files...")
         self.safe_remove(str(self.home / "Library/Caches/*warp*"), "cache")
         self.safe_remove(str(self.home / "Library/Caches/*Warp*"), "cache")
-        
+
         # Logs - might contain machine identification
         self.print_emoji("📋", "Clearing log files...")
         self.safe_remove(str(self.home / "Library/Logs/*warp*"), "logs")
         self.safe_remove(str(self.home / "Library/Logs/*Warp*"), "logs")
-        
+
         # WebKit data - browser data that might have machine fingerprints
         self.print_emoji("🌐", "Clearing web data...")
         self.safe_remove(str(self.home / "Library/WebKit/*warp*"), "web data")
         self.safe_remove(str(self.home / "Library/WebKit/*Warp*"), "web data")
-        
+
         # Saved Application State - window states and session info
         self.print_emoji("💾", "Clearing application state...")
         self.safe_remove(str(self.home / "Library/Saved Application State/*warp*"), "app state")
         self.safe_remove(str(self.home / "Library/Saved Application State/*Warp*"), "app state")
-        
+
         # HTTP Storage - might contain session tokens
         self.print_emoji("🔐", "Clearing HTTP storage...")
         self.safe_remove(str(self.home / "Library/HTTPStorages/*warp*"), "HTTP storage")
         self.safe_remove(str(self.home / "Library/HTTPStorages/*Warp*"), "HTTP storage")
-        
+
         # Clear Launch Services database (helps reset file associations)
         self.print_emoji("📊", "Updating system database...")
         try:
             lsregister_path = ("/System/Library/Frameworks/CoreServices.framework/"
                              "Frameworks/LaunchServices.framework/Support/lsregister")
-            subprocess.run([lsregister_path, "-kill", "-r", "-domain", "local", 
-                          "-domain", "system", "-domain", "user"], 
+            subprocess.run([lsregister_path, "-kill", "-r", "-domain", "local",
+                          "-domain", "system", "-domain", "user"],
                          stderr=subprocess.DEVNULL, check=False)
         except Exception as e:
             self.print_emoji("⚠️", f"Database update warning: {e}")
-            
+
     def reset_linux_identity(self):
         """Reset Warp identity on Linux - keeps app installed"""
         self.print_emoji("🐧", "Resetting Warp identity on Linux...")
-        
+
         # XDG Base Directory paths
         xdg_config = Path(os.environ.get('XDG_CONFIG_HOME', self.home / '.config'))
         xdg_data = Path(os.environ.get('XDG_DATA_HOME', self.home / '.local/share'))
         xdg_cache = Path(os.environ.get('XDG_CACHE_HOME', self.home / '.cache'))
         xdg_state = Path(os.environ.get('XDG_STATE_HOME', self.home / '.local/state'))
-        
+
         # User identity and session data
         self.print_emoji("🔑", "Clearing user identity data...")
-        
+
         # Configuration files
         self.safe_remove(str(xdg_config / 'warp'), "config")
         self.safe_remove(str(xdg_config / 'Warp'), "config")
         self.safe_remove(str(self.home / '.warp'), "legacy config")
-        
+
         # Application data
         self.print_emoji("📁", "Clearing application data...")
         self.safe_remove(str(xdg_data / 'warp'), "app data")
         self.safe_remove(str(xdg_data / 'Warp'), "app data")
-        
+
         # Cache files
         self.print_emoji("🧹", "Clearing cache files...")
         self.safe_remove(str(xdg_cache / 'warp'), "cache")
         self.safe_remove(str(xdg_cache / 'Warp'), "cache")
-        
+
         # State and logs
         self.print_emoji("📋", "Clearing state and logs...")
         self.safe_remove(str(xdg_state / 'warp'), "state")
         self.safe_remove(str(xdg_state / 'warp' / 'logs'), "logs")
-        
+
         # Temporary/runtime files
         self.print_emoji("🗑️", "Clearing temporary/runtime files...")
         try:
@@ -419,36 +473,71 @@ class WarpIdentityReset:
     def reset_windows_identity(self):
         """Reset Warp identity on Windows - keeps app installed"""
         self.print_emoji("🪟", "Resetting Warp identity on Windows...")
-        
+
         local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
         appdata = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming')))
-        
+
         # User identity and session data
         self.print_emoji("🔑", "Clearing user identity data...")
-        self.safe_remove(str(local_appdata / 'dev.warp.Warp-stable'), "user data")
-        self.safe_remove(str(appdata / 'dev.warp.Warp-stable'), "user data")
         
-        # IMPORTANT: Don't delete AppData/Local/Warp - it may contain the app itself!
+        # IMPORTANT: We only delete USER DATA, not the application itself!
+        # Check if dev.warp.Warp-stable contains user data folders (not app files)
+        warp_stable_local = local_appdata / 'dev.warp.Warp-stable'
+        warp_stable_roaming = appdata / 'dev.warp.Warp-stable'
+        
+        # Only delete specific data subfolders from dev.warp.Warp-stable
+        if warp_stable_local.exists():
+            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'IndexedDB', 'databases']:
+                subfolder_path = warp_stable_local / subfolder
+                if subfolder_path.exists():
+                    self.safe_remove(str(subfolder_path), f"dev.warp.Warp-stable/{subfolder}")
+        
+        # Roaming data is safe to delete (no app files)
+        if warp_stable_roaming.exists():
+            # Only delete data subfolders, not the whole directory
+            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'Preferences']:
+                subfolder_path = warp_stable_roaming / subfolder
+                if subfolder_path.exists():
+                    self.safe_remove(str(subfolder_path), f"dev.warp.Warp-stable (Roaming)/{subfolder}")
+
+        # IMPORTANT: Don't delete AppData/Local/Warp completely - it contains the app!
         # Only delete specific data folders inside it
         warp_appdata = local_appdata / 'Warp'
         if warp_appdata.exists():
-            # Delete only data subfolders, not the entire Warp directory
-            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage']:
+            # Delete only data subfolders, not the entire Warp directory (which has Warp.exe!)
+            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'IndexedDB', 'databases']:
                 subfolder_path = warp_appdata / subfolder
                 if subfolder_path.exists():
                     self.safe_remove(str(subfolder_path), f"Warp/{subfolder}")
-        
-        # Delete roaming data (this is safe - no app files here)
-        self.safe_remove(str(appdata / 'Warp'), "user data")
+            
+            self.print_emoji("✅", f"Preserved Warp installation at: {warp_appdata}")
 
-        # Temp files (fixed wildcard pattern)
-        self.print_emoji("🧹", "Clearing temporary files...")
+        # Delete roaming Warp data (only data subfolders, not entire folder)
+        warp_roaming = appdata / 'Warp'
+        if warp_roaming.exists():
+            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'Preferences']:
+                subfolder_path = warp_roaming / subfolder
+                if subfolder_path.exists():
+                    self.safe_remove(str(subfolder_path), f"Warp (Roaming)/{subfolder}")
+
+        # Temp files - Only remove session/cache files, NOT installers!
+        self.print_emoji("🧹", "Clearing temporary session files...")
         temp_dir = Path(os.environ.get('TEMP', 'C:/Windows/Temp'))
-        # Use proper glob pattern
-        temp_warp_files = glob.glob(str(temp_dir / "*Warp*.exe"))
-        temp_warp_files.extend(glob.glob(str(temp_dir / "*warp*.exe")))
-        for temp_file in temp_warp_files:
-            self.safe_remove(temp_file, "temp files")
+        
+        # Only remove Warp session/cache folders, NOT .exe installers
+        # This preserves any Warp installer the user might have downloaded
+        temp_patterns = [
+            "warp-*",      # Session folders like warp-session-xyz
+            "Warp-*",      # Session folders
+            "*warp*.tmp",  # Temporary files (not installers)
+            "*Warp*.tmp",  # Temporary files
+        ]
+        
+        for pattern in temp_patterns:
+            for temp_item in temp_dir.glob(pattern):
+                # Extra safety: Skip any .exe or .msi files (installers)
+                if temp_item.suffix.lower() not in ['.exe', '.msi', '.zip']:
+                    self.safe_remove(str(temp_item), "temp session files")
 
         # NOTE: We DON'T remove Start Menu shortcuts - user needs them to launch Warp!
         # The app stays installed, so shortcuts should remain
@@ -462,27 +551,27 @@ class WarpIdentityReset:
                 (winreg.HKEY_CURRENT_USER, "Software\\Warp"),
                 (winreg.HKEY_CURRENT_USER, "Software\\dev.warp.Warp-stable"),
             ]
-            
+
             for root, subkey in registry_paths:
                 self.delete_registry_key_recursive(root, subkey)
-                    
+
         except ImportError:
             self.print_emoji("⚠️", "Registry reset requires Windows")
         except Exception as e:
             self.print_emoji("⚠️", f"Registry reset warning: {e}")
-            
+
         # Kill browsers before cleaning their data
         self.kill_browser_processes()
-        
+
         # Clean browser data
         self.clean_browser_data()
-            
+
     def verify_app_still_installed(self):
         """Verify that Warp app is still installed"""
         self.print_emoji("🔍", "Verifying Warp installation...")
-        
+
         app_exists = False
-        
+
         if self.system == "Darwin":  # macOS
             app_path = "/Applications/Warp.app"
             self.print_emoji("ℹ️", f"Checking for Warp at: {app_path}")
@@ -491,7 +580,7 @@ class WarpIdentityReset:
                 self.print_emoji("✅", f"Warp app still installed: {app_path}")
             else:
                 self.print_emoji("❌", "Warp app not found - may not be installed")
-                
+
         elif self.system == "Windows":
             # Check common Windows installation paths
             program_files = Path(os.environ.get('PROGRAMFILES', 'C:/Program Files'))
@@ -503,14 +592,14 @@ class WarpIdentityReset:
                 program_files_x86 / "Warp/Warp.exe",
                 local_appdata / "Warp/Warp.exe",
             ]
-            
+
             for path in possible_paths:
                 self.print_emoji("ℹ️", f"Checking for Warp at: {path}")
                 if path.exists():
                     app_exists = True
                     self.print_emoji("✅", f"Warp app still installed: {path}")
                     break
-                    
+
             if not app_exists:
                 self.print_emoji("❌", "Warp app not found - may not be installed")
         elif self.system == "Linux":
@@ -533,9 +622,9 @@ class WarpIdentityReset:
                         break
             if not app_exists:
                 self.print_emoji("❌", "Warp app not found - may not be installed")
-                
+
         return app_exists
-        
+
     def is_admin(self):
         """Check for admin privileges"""
         try:
@@ -556,10 +645,10 @@ class WarpIdentityReset:
             self.print_emoji("❌", "This tool requires administrator privileges on Windows.")
             self.print_emoji("💡", "Please re-run this script from a Command Prompt or PowerShell with 'Run as Administrator'.")
             return False
-        
+
         # Step 1: Stop processes
         self.kill_warp_processes()
-        
+
         # Step 2: Platform-specific identity reset
         if self.system == "Darwin":  # macOS
             self.reset_macos_identity()
@@ -571,25 +660,25 @@ class WarpIdentityReset:
             self.print_emoji("❌", f"Unsupported system: {self.system}")
             self.print_emoji("💡", "This tool supports macOS, Windows, and Linux")
             return False
-            
+
         # Step 3: Verify app is still there
         app_still_there = self.verify_app_still_installed()
-        
+
         # Final report
         print("\n" + "=" * 70)
         self.print_emoji("✅", "WARP IDENTITY RESET COMPLETE!")
         print(f"📈 Reset {self.reset_count} identity items")
-        
+
         if app_still_there:
             self.print_emoji("🎉", "Perfect! Warp app is still installed")
             self.print_emoji("🆔", "Your machine now has a fresh identity to Warp")
             self.print_emoji("🚀", "Launch Warp - it will see you as a new user/machine")
         else:
             self.print_emoji("⚠️", "Warp app not detected - you may need to install it")
-            
+
         self.print_emoji("🔄", "Next: Open Warp and enjoy your fresh machine identity!")
         print("=" * 70)
-        
+
         return True
 
 
@@ -598,35 +687,36 @@ def main():
     if len(sys.argv) > 1 and sys.argv[1] in ['-h', '--help', 'help']:
         print(__doc__)
         return
-    
+
     # Show banner and copyright
     show_banner()
-        
+
     # Warn about admin privileges
     if platform.system() == "Windows":
         print("💡 Note: For complete reset on Windows, run as Administrator")
         print("   Right-click Command Prompt/PowerShell -> 'Run as Administrator'")
         print()
-        
+
     print("🔄 WARP MACHINE IDENTITY RESET")
     print("================================")
     print("This tool will:")
-    print("✅ Keep Warp app installed")
-    print("🔄 Reset your machine identity") 
+    print("✅ Keep Warp app INSTALLED (Warp.exe will NOT be deleted)")
+    print("🔄 Reset your machine identity")
     print("🗑️  Clear user data and preferences")
     print("🆔 Make Warp see you as a new user")
     print()
-    
+    print("⚠️  IMPORTANT:")
+    print("   ❌ Will NOT delete: Warp application files")
+    print("   ✅ Will delete: User data, cache, sessions, registry entries")
+    print()
+
     # Confirm before proceeding
-    response = input("⚠️  Reset Warp machine identity? Your app will stay installed (y/N): ")
-    if response.lower() not in ['y', 'yes']:
-        print("❌ Cancelled by user")
-        return
-        
+    print("✅ Automatically proceeding with identity reset...")
+
     # Run the reset
     reset_tool = WarpIdentityReset()
     success = reset_tool.run()
-    
+
     if success:
         print("\n🎯 Identity reset completed successfully!")
         print("🚀 Launch Warp to start fresh!")
