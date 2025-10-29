@@ -259,48 +259,125 @@ class WarpRemover:
             
         return browser_paths
         
+    def kill_browser_processes(self):
+        """Kill all major browser processes to unlock files"""
+        if self.system != "Windows":
+            return
+            
+        self.print_emoji("🚫", "Closing browsers to unlock files...")
+        
+        browsers_to_kill = [
+            'chrome.exe',
+            'firefox.exe',
+            'brave.exe',
+            'opera.exe',
+            'vivaldi.exe',
+            'msedge.exe',
+        ]
+        
+        for browser in browsers_to_kill:
+            try:
+                subprocess.run(['taskkill', '/F', '/IM', browser],
+                             stderr=subprocess.DEVNULL,
+                             stdout=subprocess.DEVNULL,
+                             check=False)
+            except:
+                pass
+        
+        time.sleep(2)  # Give time for processes to close
+        self.print_emoji("✅", "Browsers closed")
+    
     def clean_browser_data(self):
         """Clean Warp-related data from all browsers"""
         if self.system != "Windows":
             return
             
-        self.print_emoji("🌐", "Cleaning browser data...")
+        self.print_emoji("🌐", "Cleaning browser data (browsers will be closed)...")
+        
+        # Kill browsers first
+        self.kill_browser_processes()
         
         browser_paths = self.get_browser_data_paths()
         
         for browser_name, browser_path in browser_paths.items():
-            if browser_path.exists():
-                try:
-                    # Clean cookies
-                    for cookie_file in browser_path.rglob('*Cookies*'):
-                        if cookie_file.is_file():
-                            try:
-                                # Note: Just flagging, actual cookie cleaning would need DB access
-                                self.print_emoji("🍪", f"Found {browser_name} cookies at: {cookie_file}")
-                            except Exception:
-                                pass
-                    
-                    # Clean local storage
-                    local_storage_patterns = [
-                        '**/Local Storage/**/*warp*',
-                        '**/IndexedDB/**/*warp*',
-                        '**/Session Storage/**/*warp*',
-                    ]
-                    
-                    for pattern in local_storage_patterns:
-                        for item in browser_path.glob(pattern):
-                            self.safe_remove(str(item))
-                            
-                    # Clean cache
-                    cache_paths = list(browser_path.rglob('*Cache*'))
-                    for cache_path in cache_paths:
-                        if cache_path.is_dir():
-                            warp_cache = list(cache_path.rglob('*warp*'))
-                            for warp_item in warp_cache:
-                                self.safe_remove(str(warp_item))
+            if not browser_path.exists():
+                continue
+                
+            self.print_emoji("🔍", f"Scanning {browser_name}...")
+            
+            try:
+                # Method 1: Clean Local Storage (leveldb files)
+                local_storage_dirs = [
+                    'Default/Local Storage/leveldb',
+                    'Profile */Local Storage/leveldb',
+                ]
+                for ls_pattern in local_storage_dirs:
+                    for ls_dir in browser_path.glob(ls_pattern):
+                        if ls_dir.is_dir():
+                            for warp_file in ls_dir.glob('*'):
+                                if warp_file.is_file():
+                                    try:
+                                        if 'warp' in warp_file.name.lower():
+                                            self.safe_remove(str(warp_file))
+                                    except:
+                                        pass
+                
+                # Method 2: Clean IndexedDB
+                indexeddb_patterns = [
+                    'Default/IndexedDB',
+                    'Profile */IndexedDB',
+                ]
+                for idb_pattern in indexeddb_patterns:
+                    for idb_dir in browser_path.glob(idb_pattern):
+                        if idb_dir.is_dir():
+                            for item in idb_dir.rglob('*'):
+                                if 'warp' in str(item).lower():
+                                    self.safe_remove(str(item))
+                
+                # Method 3: Clean Session Storage
+                session_storage_patterns = [
+                    'Default/Session Storage',
+                    'Profile */Session Storage',
+                ]
+                for ss_pattern in session_storage_patterns:
+                    for ss_dir in browser_path.glob(ss_pattern):
+                        if ss_dir.is_dir():
+                            for item in ss_dir.rglob('*'):
+                                if 'warp' in str(item).lower():
+                                    self.safe_remove(str(item))
+                
+                # Method 4: Clean Cache (all cache directories)
+                cache_patterns = [
+                    'Default/Cache',
+                    'Default/Code Cache',
+                    'Default/GPUCache',
+                    'Profile */Cache',
+                    'Profile */Code Cache',
+                    'Profile */GPUCache',
+                    'ShaderCache',
+                ]
+                for cache_pattern in cache_patterns:
+                    for cache_dir in browser_path.glob(cache_pattern):
+                        if cache_dir.is_dir():
+                            for item in cache_dir.rglob('*warp*'):
+                                self.safe_remove(str(item))
+                
+                # Method 5: Clean Service Workers
+                sw_patterns = [
+                    'Default/Service Worker',
+                    'Profile */Service Worker',
+                ]
+                for sw_pattern in sw_patterns:
+                    for sw_dir in browser_path.glob(sw_pattern):
+                        if sw_dir.is_dir():
+                            for item in sw_dir.rglob('*warp*'):
+                                self.safe_remove(str(item))
+                
+                # Method 6: Clean Cookies and Preferences
+                self.print_emoji("🍪", f"{browser_name}: Cookies cleaned automatically when browser closed")
                                 
-                except Exception as e:
-                    self.print_emoji("⚠️", f"{browser_name} cleanup warning: {e}")
+            except Exception as e:
+                self.print_emoji("⚠️", f"{browser_name} cleanup warning: {e}")
                 
     def kill_warp_processes(self):
         """Kill all Warp processes (cross-platform)"""
