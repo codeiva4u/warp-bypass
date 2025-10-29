@@ -61,30 +61,60 @@ graph TB
 ## 🚀 Quick Start
 
 ### Prerequisites
-- Python 3.6+ (pre-installed on macOS)
-- Admin privileges (recommended)
+- Python 3.6+ (pre-installed on macOS/Linux)
+- Administrator/Root privileges
+- **Close all browsers before running** (Chrome, Firefox, Brave, etc.)
 
-### Installation
+### 📝 Step-by-Step Guide
+
+#### **Step 1: Clone Repository**
 ```bash
 git clone https://github.com/black12-ag/warp-bypass.git
 cd warp-bypass
-
-# Identity Reset (Recommended)
-python3 warp_id_reset.py   # macOS/Linux
-python warp_id_reset.py    # Windows
-
-# Complete Removal
-python3 warp_remover.py    # macOS/Linux  
-python warp_remover.py     # Windows
 ```
 
-```
-python warp_remover.py     # Windows
+#### **Step 2: Choose Your Tool**
+
+**Option A: 🔄 Identity Reset (Recommended)**
+- ✅ Keeps Warp installed
+- ✅ Resets machine identity
+- ✅ Ready to use immediately
+
+```bash
+# Windows (Run PowerShell/CMD as Administrator)
+python warp_id_reset.py
+
+# macOS (Run with sudo)
+sudo python3 warp_id_reset.py
+
+# Linux (Run with sudo)
+sudo python3 warp_id_reset.py
 ```
 
+**Option B: 🗑️ Complete Removal**
+- ❌ Removes Warp completely
+- ✅ Clean slate for reinstall
+- ⚠️ Need to reinstall Warp after
+
+```bash
+# Windows (Run PowerShell/CMD as Administrator)
+python warp_remover.py
+
+# macOS (Run with sudo)
+sudo python3 warp_remover.py
+
+# Linux (Run with sudo)
+sudo python3 warp_remover.py
 ```
-python warp_id_reset.py    # Windows
-```
+
+#### **Step 3: Follow Prompts**
+- Confirm action when asked (y/N)
+- Wait for process to complete
+- Check verification output
+
+#### **Step 4: Launch Warp**
+- **Identity Reset**: Launch Warp immediately - it will see you as a new user!
+- **Complete Removal**: Reinstall Warp first, then launch
 
 ## 🐧 Linux Users - Standalone Scripts
 
@@ -178,7 +208,37 @@ chmod +x linux_reset.sh linux_remove.sh
 | 🗑️ Application Removal | ✅ | ✅ | ✅ |
 | 📁 Data Cleanup | ✅ | ✅ | ✅ |
 | 📊 System DB Cleanup | ✅ | ✅ | ✅ |
+| 🌐 Browser Data Cleanup | ✅ | ✅ | ✅ |
 | 🔍 Verification | ✅ | ✅ | ✅ |
+
+## 🌐 Browser Data Cleanup (Windows)
+
+**Both tools automatically clean Warp data from 6 major browsers:**
+
+### Supported Browsers
+- ✅ Google Chrome
+- ✅ Mozilla Firefox  
+- ✅ Brave Browser
+- ✅ Opera
+- ✅ Vivaldi
+- ✅ Ulaa Browser
+
+### 7 Cleanup Methods
+
+1. **Local Storage** - `leveldb` files containing session data
+2. **IndexedDB** - Database files with persistent storage
+3. **Session Storage** - Temporary session information
+4. **Cache** - All cache types (Cache, Code Cache, GPU Cache, Shader Cache)
+5. **Service Workers** - Background scripts and workers
+6. **Cookies** - Automatically cleaned when browsers close
+7. **Preferences** - Scanned for Warp references
+
+### Auto Browser Kill
+- 🚫 Automatically closes all browsers before cleanup
+- 🔓 Unlocks files for complete deletion
+- ⚡ Ensures 100% cleanup success
+
+**Note:** For best results, close all browsers manually before running the tool
 
 ## ⚠️ Important Notes
 
