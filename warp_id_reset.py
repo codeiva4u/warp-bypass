@@ -480,45 +480,53 @@ class WarpIdentityReset:
         # User identity and session data
         self.print_emoji("🔑", "Clearing user identity data...")
         
-        # IMPORTANT: We only delete USER DATA, not the application itself!
-        # Check if dev.warp.Warp-stable contains user data folders (not app files)
-        warp_stable_local = local_appdata / 'dev.warp.Warp-stable'
-        warp_stable_roaming = appdata / 'dev.warp.Warp-stable'
+        # OFFICIAL WARP PATHS (from Warp documentation)
+        # Main data location: $env:LOCALAPPDATA\warp\Warp
+        # Settings location: $env:APPDATA\warp\Warp
         
-        # Only delete specific data subfolders from dev.warp.Warp-stable
+        # Path 1: Local AppData - Main database, logs, codebase context, mcp logs
+        warp_local = local_appdata / 'warp' / 'Warp'
+        if warp_local.exists():
+            self.print_emoji("🔍", f"Found Warp data at: {warp_local}")
+            # Delete everything EXCEPT the Warp.exe and app files
+            # Only delete data subfolders
+            for item in warp_local.iterdir():
+                # Skip the main exe and critical app files
+                if item.name.lower() not in ['warp.exe', 'resources', 'locales', 'swiftshader']:
+                    self.safe_remove(str(item), f"warp/Warp/{item.name}")
+            self.print_emoji("✅", f"Cleaned Warp data, preserved app at: {warp_local}")
+        else:
+            self.print_emoji("⚠️", f"Warp data not found at: {warp_local}")
+        
+        # Path 2: Roaming AppData - Themes and launch configurations
+        warp_roaming = appdata / 'warp' / 'Warp'
+        if warp_roaming.exists():
+            self.print_emoji("🔍", f"Found Warp settings at: {warp_roaming}")
+            self.safe_remove(str(warp_roaming), "warp/Warp (settings)")
+        
+        # Path 3: Legacy paths (for older Warp versions)
+        # Check dev.warp.Warp-stable (old path)
+        warp_stable_local = local_appdata / 'dev.warp.Warp-stable'
         if warp_stable_local.exists():
+            self.print_emoji("🔍", "Found legacy Warp data (dev.warp.Warp-stable)")
             for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'IndexedDB', 'databases']:
                 subfolder_path = warp_stable_local / subfolder
                 if subfolder_path.exists():
                     self.safe_remove(str(subfolder_path), f"dev.warp.Warp-stable/{subfolder}")
         
-        # Roaming data is safe to delete (no app files)
+        warp_stable_roaming = appdata / 'dev.warp.Warp-stable'
         if warp_stable_roaming.exists():
-            # Only delete data subfolders, not the whole directory
-            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'Preferences']:
-                subfolder_path = warp_stable_roaming / subfolder
-                if subfolder_path.exists():
-                    self.safe_remove(str(subfolder_path), f"dev.warp.Warp-stable (Roaming)/{subfolder}")
-
-        # IMPORTANT: Don't delete AppData/Local/Warp completely - it contains the app!
-        # Only delete specific data folders inside it
-        warp_appdata = local_appdata / 'Warp'
-        if warp_appdata.exists():
-            # Delete only data subfolders, not the entire Warp directory (which has Warp.exe!)
+            self.print_emoji("🔍", "Found legacy Warp settings (dev.warp.Warp-stable)")
+            self.safe_remove(str(warp_stable_roaming), "dev.warp.Warp-stable (settings)")
+        
+        # Path 4: Check old AppData/Local/Warp (without lowercase 'warp' parent)
+        warp_old_local = local_appdata / 'Warp'
+        if warp_old_local.exists() and warp_old_local != warp_local.parent:
+            self.print_emoji("🔍", f"Found old Warp data at: {warp_old_local}")
             for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'IndexedDB', 'databases']:
-                subfolder_path = warp_appdata / subfolder
+                subfolder_path = warp_old_local / subfolder
                 if subfolder_path.exists():
                     self.safe_remove(str(subfolder_path), f"Warp/{subfolder}")
-            
-            self.print_emoji("✅", f"Preserved Warp installation at: {warp_appdata}")
-
-        # Delete roaming Warp data (only data subfolders, not entire folder)
-        warp_roaming = appdata / 'Warp'
-        if warp_roaming.exists():
-            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage', 'Preferences']:
-                subfolder_path = warp_roaming / subfolder
-                if subfolder_path.exists():
-                    self.safe_remove(str(subfolder_path), f"Warp (Roaming)/{subfolder}")
 
         # Temp files - Only remove session/cache files, NOT installers!
         self.print_emoji("🧹", "Clearing temporary session files...")
@@ -547,9 +555,11 @@ class WarpIdentityReset:
         try:
             import winreg
             # Clean up user-specific registry locations (not system-wide)
+            # Official path from Warp docs: HKCU:\Software\Warp.dev\Warp
             registry_paths = [
-                (winreg.HKEY_CURRENT_USER, "Software\\Warp"),
-                (winreg.HKEY_CURRENT_USER, "Software\\dev.warp.Warp-stable"),
+                (winreg.HKEY_CURRENT_USER, "Software\\Warp.dev\\Warp"),  # Official path
+                (winreg.HKEY_CURRENT_USER, "Software\\Warp"),  # Legacy
+                (winreg.HKEY_CURRENT_USER, "Software\\dev.warp.Warp-stable"),  # Legacy
             ]
 
             for root, subkey in registry_paths:
@@ -582,26 +592,36 @@ class WarpIdentityReset:
                 self.print_emoji("❌", "Warp app not found - may not be installed")
 
         elif self.system == "Windows":
-            # Check common Windows installation paths
-            program_files = Path(os.environ.get('PROGRAMFILES', 'C:/Program Files'))
-            program_files_x86 = Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)'))
+            # Check Windows installation paths (official + legacy)
             local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
 
-            possible_paths = [
-                program_files / "Warp/Warp.exe",
-                program_files_x86 / "Warp/Warp.exe",
-                local_appdata / "Warp/Warp.exe",
+            # Official path from Warp documentation
+            official_path = local_appdata / 'warp' / 'Warp' / 'Warp.exe'
+            
+            # Legacy paths for older versions
+            legacy_paths = [
+                local_appdata / 'Warp' / 'Warp.exe',
+                Path(os.environ.get('PROGRAMFILES', 'C:/Program Files')) / "Warp/Warp.exe",
+                Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)')) / "Warp/Warp.exe",
             ]
-
-            for path in possible_paths:
-                self.print_emoji("ℹ️", f"Checking for Warp at: {path}")
-                if path.exists():
-                    app_exists = True
-                    self.print_emoji("✅", f"Warp app still installed: {path}")
-                    break
+            
+            # Check official path first
+            self.print_emoji("ℹ️", f"Checking for Warp at: {official_path}")
+            if official_path.exists():
+                app_exists = True
+                self.print_emoji("✅", f"Warp app still installed: {official_path}")
+            else:
+                # Check legacy paths
+                for path in legacy_paths:
+                    self.print_emoji("ℹ️", f"Checking for Warp at: {path}")
+                    if path.exists():
+                        app_exists = True
+                        self.print_emoji("✅", f"Warp app still installed: {path}")
+                        break
 
             if not app_exists:
                 self.print_emoji("❌", "Warp app not found - may not be installed")
+                self.print_emoji("💡", "If Warp is installed, it may be at a custom location")
         elif self.system == "Linux":
             # Try to find the 'warp' binary or installation directories
             binary = shutil.which("warp")
