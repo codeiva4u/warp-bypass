@@ -56,6 +56,140 @@ class WarpIdentityReset:
         self.system = platform.system()
         self.home = Path.home()
         self.reset_count = 0
+        self.detected_warp_paths = []  # Store detected Warp installations
+    
+    def auto_detect_warp_paths(self):
+        """Automatically detect all Warp installation paths"""
+        self.print_emoji("🔍", "Auto-detecting Warp installations...")
+        detected = []
+        
+        if self.system == "Windows":
+            local_appdata = Path(os.environ.get('LOCALAPPDATA', str(self.home / 'AppData/Local')))
+            appdata = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming')))
+            program_files = Path(os.environ.get('PROGRAMFILES', 'C:/Program Files'))
+            program_files_x86 = Path(os.environ.get('PROGRAMFILES(X86)', 'C:/Program Files (x86)'))
+            
+            # Search patterns for different Warp installations
+            search_locations = [
+                # Official paths
+                (local_appdata / 'warp', 'Official Warp (new)'),
+                (appdata / 'warp', 'Official Warp settings (new)'),
+                
+                # Legacy paths
+                (local_appdata / 'dev.warp.Warp-stable', 'Legacy Warp-Stable'),
+                (appdata / 'dev.warp.Warp-stable', 'Legacy Warp-Stable settings'),
+                (local_appdata / 'Warp', 'Old Warp'),
+                (appdata / 'Warp', 'Old Warp settings'),
+                
+                # Program Files installations
+                (program_files / 'Warp', 'Warp (Program Files)'),
+                (program_files_x86 / 'Warp', 'Warp (Program Files x86)'),
+            ]
+            
+            for path, description in search_locations:
+                if path.exists():
+                    # Check if it's actually a Warp directory
+                    if self._is_warp_directory(path):
+                        detected.append({
+                            'path': path,
+                            'description': description,
+                            'type': 'data' if 'settings' not in description.lower() else 'settings'
+                        })
+                        self.print_emoji("✅", f"Found: {description} at {path}")
+            
+            # Also search for any warp-related directories
+            self._deep_search_warp_dirs(local_appdata, detected)
+            self._deep_search_warp_dirs(appdata, detected)
+            
+        elif self.system == "Darwin":  # macOS
+            search_locations = [
+                (Path("/Applications/Warp.app"), 'Warp Application'),
+                (self.home / "Library/Application Support", 'App Support'),
+                (self.home / "Library/Preferences", 'Preferences'),
+                (self.home / "Library/Caches", 'Caches'),
+            ]
+            
+            for base_path, description in search_locations:
+                if base_path.exists():
+                    if 'Warp.app' in str(base_path):
+                        detected.append({'path': base_path, 'description': description, 'type': 'app'})
+                    else:
+                        # Search for warp-related subdirectories
+                        for item in base_path.glob('*[Ww]arp*'):
+                            if item.is_dir():
+                                detected.append({'path': item, 'description': f"{description}/{item.name}", 'type': 'data'})
+                                self.print_emoji("✅", f"Found: {item}")
+        
+        elif self.system == "Linux":
+            xdg_config = Path(os.environ.get('XDG_CONFIG_HOME', self.home / '.config'))
+            xdg_data = Path(os.environ.get('XDG_DATA_HOME', self.home / '.local/share'))
+            xdg_cache = Path(os.environ.get('XDG_CACHE_HOME', self.home / '.cache'))
+            
+            search_locations = [
+                (Path('/opt/Warp'), 'Warp (/opt)'),
+                (Path('/usr/local/bin/warp'), 'Warp binary'),
+                (xdg_config, 'Config'),
+                (xdg_data, 'Data'),
+                (xdg_cache, 'Cache'),
+            ]
+            
+            for path, description in search_locations:
+                if path.exists():
+                    if path.is_file() and 'warp' in path.name.lower():
+                        detected.append({'path': path, 'description': description, 'type': 'binary'})
+                    elif path.is_dir():
+                        for item in path.glob('*[Ww]arp*'):
+                            detected.append({'path': item, 'description': f"{description}/{item.name}", 'type': 'data'})
+                            self.print_emoji("✅", f"Found: {item}")
+        
+        self.detected_warp_paths = detected
+        
+        if detected:
+            self.print_emoji("🎯", f"Auto-detected {len(detected)} Warp location(s)")
+        else:
+            self.print_emoji("⚠️", "No Warp installations detected - will check standard paths")
+        
+        return detected
+    
+    def _is_warp_directory(self, path):
+        """Check if a directory is actually a Warp installation/data directory"""
+        if not path.exists() or not path.is_dir():
+            return False
+        
+        # Check for Warp-specific files/folders
+        warp_indicators = [
+            'Warp.exe',  # Main executable
+            'warp.exe',
+            'User Data',  # User data folder
+            'Cache',  # Cache folder
+            'Logs',  # Logs folder
+            'IndexedDB',  # Database
+            'Local Storage',  # Storage
+        ]
+        
+        # If any indicator exists, it's likely a Warp directory
+        for indicator in warp_indicators:
+            if (path / indicator).exists():
+                return True
+        
+        return False
+    
+    def _deep_search_warp_dirs(self, base_path, detected):
+        """Deep search for any warp-related directories"""
+        try:
+            # Search 2 levels deep only (for performance)
+            for item in base_path.glob('*'):
+                if item.is_dir() and 'warp' in item.name.lower():
+                    if item not in [d['path'] for d in detected]:
+                        if self._is_warp_directory(item):
+                            detected.append({
+                                'path': item,
+                                'description': f'Detected: {item.name}',
+                                'type': 'data'
+                            })
+                            self.print_emoji("🔍", f"Deep scan found: {item}")
+        except (PermissionError, OSError):
+            pass  # Skip inaccessible directories
 
     def print_emoji(self, emoji, message):
         """Print message with emoji (works cross-platform)"""
@@ -665,6 +799,16 @@ class WarpIdentityReset:
             self.print_emoji("❌", "This tool requires administrator privileges on Windows.")
             self.print_emoji("💡", "Please re-run this script from a Command Prompt or PowerShell with 'Run as Administrator'.")
             return False
+
+        # Step 0: Auto-detect all Warp installations
+        print()
+        detected_paths = self.auto_detect_warp_paths()
+        print()
+        
+        if not detected_paths:
+            self.print_emoji("⚠️", "Warning: No Warp installations auto-detected")
+            self.print_emoji("💡", "Proceeding with standard paths anyway...")
+            print()
 
         # Step 1: Stop processes
         self.kill_warp_processes()
