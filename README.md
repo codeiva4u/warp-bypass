@@ -84,15 +84,15 @@ cd warp-bypass
 - Right-click on PowerShell/CMD
 - Select "Run as Administrator"
 
-**Option A: 🔄 Identity Reset (Recommended)**
-```powershell
-# Windows - Run as Administrator
-python warp_remover.py
-```
-**Option B: 🗑️ Complete Removal**
+ **Option A: 🔄 Identity Reset (Recommended)**
 ```powershell
 # Windows - Run as Administrator
 python warp_id_reset.py
+```
+ **Option B: 🗑️ Complete Removal**
+```powershell
+# Windows - Run as Administrator
+python warp_remover.py
 ```
 - ✅ Keeps Warp installed
 - ✅ Resets machine identity  
