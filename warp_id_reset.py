@@ -312,7 +312,18 @@ class WarpIdentityReset:
         self.print_emoji("🔑", "Clearing user identity data...")
         self.safe_remove(str(local_appdata / 'dev.warp.Warp-stable'), "user data")
         self.safe_remove(str(appdata / 'dev.warp.Warp-stable'), "user data")
-        self.safe_remove(str(local_appdata / 'Warp'), "user data")
+        
+        # IMPORTANT: Don't delete AppData/Local/Warp - it may contain the app itself!
+        # Only delete specific data folders inside it
+        warp_appdata = local_appdata / 'Warp'
+        if warp_appdata.exists():
+            # Delete only data subfolders, not the entire Warp directory
+            for subfolder in ['User Data', 'Cache', 'Logs', 'Local Storage', 'Session Storage']:
+                subfolder_path = warp_appdata / subfolder
+                if subfolder_path.exists():
+                    self.safe_remove(str(subfolder_path), f"Warp/{subfolder}")
+        
+        # Delete roaming data (this is safe - no app files here)
         self.safe_remove(str(appdata / 'Warp'), "user data")
 
         # Temp files (fixed wildcard pattern)
@@ -324,10 +335,8 @@ class WarpIdentityReset:
         for temp_file in temp_warp_files:
             self.safe_remove(temp_file, "temp files")
 
-        # Start Menu link
-        self.print_emoji("🔗", "Removing Start Menu link...")
-        start_menu = Path(os.environ.get('APPDATA', str(self.home / 'AppData/Roaming'))) / "Microsoft/Windows/Start Menu/Programs"
-        self.safe_remove(str(start_menu / "Warp.lnk"))
+        # NOTE: We DON'T remove Start Menu shortcuts - user needs them to launch Warp!
+        # The app stays installed, so shortcuts should remain
 
         # Registry cleanup - remove machine-specific registry entries (now recursive)
         self.print_emoji("📊", "Resetting registry entries (recursive)...")
