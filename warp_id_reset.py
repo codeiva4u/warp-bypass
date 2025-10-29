@@ -293,8 +293,11 @@ class WarpIdentityReset:
             'firefox.exe',
             'brave.exe',
             'opera.exe',
+            'opera_gx.exe',  # Opera GX
             'vivaldi.exe',
             'msedge.exe',
+            'ulaa.exe',  # Ulaa browser
+            'Ulaa.exe',  # Alternative naming
         ]
 
         for browser in browsers_to_kill:
@@ -323,19 +326,21 @@ class WarpIdentityReset:
                 'Firefox': appdata / 'Mozilla/Firefox/Profiles',
                 'Brave': local_appdata / 'BraveSoftware/Brave-Browser/User Data',
                 'Opera': appdata / 'Opera Software/Opera Stable',
+                'Opera GX': appdata / 'Opera Software/Opera GX Stable',  # Opera GX variant
                 'Vivaldi': local_appdata / 'Vivaldi/User Data',
-                'Ulaa': local_appdata / 'Ulaa/User Data',  # Added Ulaa browser support
+                'Ulaa': local_appdata / 'Ulaa/User Data',
             }
 
         return browser_paths
 
     def clean_browser_data(self):
-        """Clean ALL data from all browsers (COMPLETE CLEANUP)"""
+        """Clean ALL data from all browsers (100% COMPLETE CLEANUP)"""
         if self.system != "Windows":
             return
 
-        self.print_emoji("🌐", "Cleaning ALL browser data (Complete wipe - browsers will be closed!)...")
-        self.print_emoji("⚠️", "WARNING: This will delete ALL cookies, cache, sessions, and storage from all browsers!")
+        self.print_emoji("🌐", "Cleaning ALL browser data (ULTRA-COMPLETE wipe - browsers will be closed!)...")
+        self.print_emoji("⚠️", "WARNING: This will delete 100% of ALL cookies, cache, sessions, storage, and browsing data!")
+        self.print_emoji("🔥", "Target browsers: Chrome, Firefox, Brave, Opera, Opera GX, Vivaldi, Ulaa")
 
         browser_paths = self.get_browser_data_paths()
 
@@ -343,146 +348,548 @@ class WarpIdentityReset:
             if not browser_path.exists():
                 continue
 
-            self.print_emoji("🔍", f"Deep cleaning {browser_name}...")
+            self.print_emoji("🔍", f"Ultra-deep cleaning {browser_name} (62+ data types)...")
 
             try:
-                # Method 1: Clean ALL Local Storage (complete deletion)
-                local_storage_patterns = [
-                    'Default/Local Storage',
-                    'Profile */Local Storage',
-                ]
-                for ls_pattern in local_storage_patterns:
-                    for ls_dir in browser_path.glob(ls_pattern):
-                        if ls_dir.is_dir():
-                            self.safe_remove(str(ls_dir), f"{browser_name} Local Storage (ALL)")
+                # Get all profiles to clean
+                profiles = []
+                
+                # Firefox has different profile structure
+                if browser_name == 'Firefox':
+                    # Firefox profiles are in subdirectories with random names
+                    for profile_dir in browser_path.iterdir():
+                        if profile_dir.is_dir() and not profile_dir.name.startswith('.'):
+                            profiles.append(profile_dir.name)
+                else:
+                    # Chromium-based browsers
+                    profiles = ['Default']
+                    for profile_dir in browser_path.glob('Profile *'):
+                        if profile_dir.is_dir():
+                            profiles.append(profile_dir.name)
+                
+                for profile in profiles:
+                    profile_path = browser_path / profile
+                    if not profile_path.exists():
+                        continue
+                    
+                    self.print_emoji("📂", f"Cleaning {browser_name}/{profile}...")
+                    
+                    # ============= OPERA-SPECIFIC CLEANUP =============
+                    if browser_name in ['Opera', 'Opera GX']:
+                        # Opera-specific files and folders (beyond standard Chromium)
+                        opera_items = [
+                            'Opera Stable',  # Opera stable files
+                            'Jump List Icons',
+                            'Jump List IconsOld',
+                            'Local Extension Settings',
+                            'Sync Extension Settings',
+                            'Extension Rules',
+                            'Platform Notifications',
+                            'IndexedDB',
+                            'Local Storage',
+                            'Session Storage',
+                            'databases',
+                            'Application Cache',
+                            'Cache',
+                            'Code Cache',
+                            'GPUCache',
+                            'Cookies',
+                            'Cookies-journal',
+                            'Login Data',
+                            'Login Data-journal',
+                            'Web Data',
+                            'Web Data-journal',
+                            'History',
+                            'History-journal',
+                            'Visited Links',
+                            'Preferences',
+                            'Secure Preferences',
+                        ]
+                        
+                        for opera_item in opera_items:
+                            opera_path = profile_path / opera_item
+                            if opera_path.exists():
+                                self.safe_remove(str(opera_path), f"{browser_name}/{profile} {opera_item}")
+                        
+                        # Continue to standard Chromium cleanup (don't skip)
+                    
+                    # ============= FIREFOX-SPECIFIC CLEANUP =============
+                    if browser_name == 'Firefox':
+                        # Firefox-specific files and folders
+                        firefox_items = [
+                            'cookies.sqlite',
+                            'cookies.sqlite-shm',
+                            'cookies.sqlite-wal',
+                            'places.sqlite',  # History and bookmarks
+                            'places.sqlite-shm',
+                            'places.sqlite-wal',
+                            'favicons.sqlite',
+                            'favicons.sqlite-shm',
+                            'favicons.sqlite-wal',
+                            'formhistory.sqlite',  # Form autofill
+                            'formhistory.sqlite-shm',
+                            'formhistory.sqlite-wal',
+                            'webappsstore.sqlite',  # Local storage
+                            'webappsstore.sqlite-shm',
+                            'webappsstore.sqlite-wal',
+                            'storage',  # Storage folder
+                            'storage.sqlite',
+                            'storage-sync-v2.sqlite',
+                            'content-prefs.sqlite',  # Site preferences
+                            'permissions.sqlite',  # Site permissions
+                            'sessionstore.jsonlz4',  # Session data
+                            'sessionstore-backups',
+                            'sessionCheckpoints.json',
+                            'cache2',  # HTTP cache
+                            'OfflineCache',
+                            'thumbnails',
+                            'startupCache',
+                            'safebrowsing',
+                            'datareporting',
+                            'saved-telemetry-pings',
+                            'crashes',
+                            'minidumps',
+                        ]
+                        
+                        for ff_item in firefox_items:
+                            ff_path = profile_path / ff_item
+                            if ff_path.exists():
+                                self.safe_remove(str(ff_path), f"{browser_name}/{profile} {ff_item}")
+                        
+                        # Continue to next profile as Firefox cleanup is done
+                        continue
+                    
+                    # ============= STORAGE DATA =============
+                    # 1. Local Storage (leveldb + all variants)
+                    storage_items = [
+                        'Local Storage',
+                        'Local Storage/leveldb',
+                    ]
+                    for item in storage_items:
+                        item_path = profile_path / item
+                        if item_path.exists():
+                            self.safe_remove(str(item_path), f"{browser_name}/{profile} {item}")
+                    
+                    # 2. IndexedDB (complete database)
+                    idb_path = profile_path / 'IndexedDB'
+                    if idb_path.exists():
+                        self.safe_remove(str(idb_path), f"{browser_name}/{profile} IndexedDB")
+                    
+                    # 3. Session Storage
+                    session_storage_path = profile_path / 'Session Storage'
+                    if session_storage_path.exists():
+                        self.safe_remove(str(session_storage_path), f"{browser_name}/{profile} Session Storage")
+                    
+                    # 4. File System (HTML5 File API)
+                    filesystem_path = profile_path / 'File System'
+                    if filesystem_path.exists():
+                        self.safe_remove(str(filesystem_path), f"{browser_name}/{profile} File System")
+                    
+                    # 5. Blob Storage
+                    blob_path = profile_path / 'blob_storage'
+                    if blob_path.exists():
+                        self.safe_remove(str(blob_path), f"{browser_name}/{profile} Blob Storage")
+                    
+                    # ============= CACHE DATA =============
+                    # 6-12. All Cache Types
+                    cache_items = [
+                        'Cache',
+                        'Code Cache',
+                        'GPUCache',
+                        'DawnCache',
+                        'ShaderCache',
+                        'Media Cache',
+                        'Service Worker/CacheStorage',
+                        'Application Cache',
+                        'Storage/ext',  # Extension cache
+                    ]
+                    for cache_item in cache_items:
+                        cache_path = profile_path / cache_item
+                        if cache_path.exists():
+                            self.safe_remove(str(cache_path), f"{browser_name}/{profile} {cache_item}")
+                    
+                    # ============= COOKIES & NETWORK =============
+                    # 13. Cookies (all types)
+                    cookie_items = [
+                        'Cookies',
+                        'Cookies-journal',
+                        'Network/Cookies',
+                        'Network/Cookies-journal',
+                    ]
+                    for cookie_item in cookie_items:
+                        cookie_path = profile_path / cookie_item
+                        if cookie_path.exists():
+                            self.safe_remove(str(cookie_path), f"{browser_name}/{profile} {cookie_item}")
+                    
+                    # 14. Network Persistent State
+                    network_path = profile_path / 'Network Persistent State'
+                    if network_path.exists():
+                        self.safe_remove(str(network_path), f"{browser_name}/{profile} Network State")
+                    
+                    # 15. Network Action Predictor
+                    predictor_path = profile_path / 'Network Action Predictor'
+                    if predictor_path.exists():
+                        self.safe_remove(str(predictor_path), f"{browser_name}/{profile} Predictor")
+                    
+                    # 16. Transport Security (HSTS)
+                    transport_path = profile_path / 'TransportSecurity'
+                    if transport_path.exists():
+                        self.safe_remove(str(transport_path), f"{browser_name}/{profile} Transport Security")
+                    
+                    # ============= SERVICE WORKERS =============
+                    # 17. Service Workers (complete)
+                    sw_items = [
+                        'Service Worker',
+                        'Service Worker/Database',
+                        'Service Worker/ScriptCache',
+                    ]
+                    for sw_item in sw_items:
+                        sw_path = profile_path / sw_item
+                        if sw_path.exists():
+                            self.safe_remove(str(sw_path), f"{browser_name}/{profile} {sw_item}")
+                    
+                    # ============= HISTORY & NAVIGATION =============
+                    # 18. History (complete)
+                    history_items = [
+                        'History',
+                        'History-journal',
+                        'History Provider Cache',
+                        'Visited Links',
+                        'Top Sites',
+                        'Top Sites-journal',
+                        'Shortcuts',
+                        'Shortcuts-journal',
+                    ]
+                    for history_item in history_items:
+                        history_path = profile_path / history_item
+                        if history_path.exists():
+                            self.safe_remove(str(history_path), f"{browser_name}/{profile} {history_item}")
+                    
+                    # ============= WEB DATA & AUTOFILL =============
+                    # 19. Web Data (Autofill, etc.)
+                    webdata_items = [
+                        'Web Data',
+                        'Web Data-journal',
+                    ]
+                    for webdata_item in webdata_items:
+                        webdata_path = profile_path / webdata_item
+                        if webdata_path.exists():
+                            self.safe_remove(str(webdata_path), f"{browser_name}/{profile} {webdata_item}")
+                    
+                    # ============= SESSIONS =============
+                    # 20. Sessions (all types)
+                    session_items = [
+                        'Sessions',
+                        'Session Storage',
+                        'Current Session',
+                        'Current Tabs',
+                        'Last Session',
+                        'Last Tabs',
+                    ]
+                    for session_item in session_items:
+                        session_path = profile_path / session_item
+                        if session_path.exists():
+                            self.safe_remove(str(session_path), f"{browser_name}/{profile} {session_item}")
+                    
+                    # ============= PREFERENCES & SETTINGS =============
+                    # 21. Preferences (all)
+                    pref_items = [
+                        'Preferences',
+                        'Secure Preferences',
+                        'Local State',
+                    ]
+                    for pref_item in pref_items:
+                        pref_path = profile_path / pref_item
+                        if pref_path.exists():
+                            self.safe_remove(str(pref_path), f"{browser_name}/{profile} {pref_item}")
+                    
+                    # ============= EXTENSIONS =============
+                    # 22. Extensions (complete data)
+                    ext_items = [
+                        'Extensions',
+                        'Extension Cookies',
+                        'Extension Cookies-journal',
+                        'Extension State',
+                        'Extension Rules',
+                    ]
+                    for ext_item in ext_items:
+                        ext_path = profile_path / ext_item
+                        if ext_path.exists():
+                            self.safe_remove(str(ext_path), f"{browser_name}/{profile} {ext_item}")
+                    
+                    # ============= SYNC & CLOUD =============
+                    # 23. Sync Data
+                    sync_items = [
+                        'Sync Data',
+                        'Sync Extension Settings',
+                    ]
+                    for sync_item in sync_items:
+                        sync_path = profile_path / sync_item
+                        if sync_path.exists():
+                            self.safe_remove(str(sync_path), f"{browser_name}/{profile} {sync_item}")
+                    
+                    # ============= BOOKMARKS =============
+                    # 24. Bookmarks
+                    bookmark_items = [
+                        'Bookmarks',
+                        'Bookmarks.bak',
+                    ]
+                    for bookmark_item in bookmark_items:
+                        bookmark_path = profile_path / bookmark_item
+                        if bookmark_path.exists():
+                            self.safe_remove(str(bookmark_path), f"{browser_name}/{profile} {bookmark_item}")
+                    
+                    # ============= DOWNLOADS =============
+                    # 25. Download Metadata
+                    download_items = [
+                        'Download Service',
+                        'Download Metadata',
+                    ]
+                    for download_item in download_items:
+                        download_path = profile_path / download_item
+                        if download_path.exists():
+                            self.safe_remove(str(download_path), f"{browser_name}/{profile} {download_item}")
+                    
+                    # ============= NOTIFICATIONS & PERMISSIONS =============
+                    # 26. Platform Notifications
+                    notif_path = profile_path / 'Platform Notifications'
+                    if notif_path.exists():
+                        self.safe_remove(str(notif_path), f"{browser_name}/{profile} Notifications")
+                    
+                    # 27. Notifications
+                    notif2_path = profile_path / 'Notifications'
+                    if notif2_path.exists():
+                        self.safe_remove(str(notif2_path), f"{browser_name}/{profile} Notifications DB")
+                    
+                    # ============= BACKGROUND SYNC =============
+                    # 28. Background Sync
+                    bg_sync_path = profile_path / 'Background Sync'
+                    if bg_sync_path.exists():
+                        self.safe_remove(str(bg_sync_path), f"{browser_name}/{profile} Background Sync")
+                    
+                    # ============= SECURITY & CERTIFICATES =============
+                    # 29. Origin Bound Certs
+                    cert_path = profile_path / 'Origin Bound Certs'
+                    if cert_path.exists():
+                        self.safe_remove(str(cert_path), f"{browser_name}/{profile} Certificates")
+                    
+                    # ============= REPORTING & LOGGING =============
+                    # 30. Reporting and NEL
+                    report_items = [
+                        'Reporting and NEL',
+                        'Reporting and NEL-journal',
+                    ]
+                    for report_item in report_items:
+                        report_path = profile_path / report_item
+                        if report_path.exists():
+                            self.safe_remove(str(report_path), f"{browser_name}/{profile} {report_item}")
+                    
+                    # ============= STORAGE QUOTA =============
+                    # 31. Quota Manager
+                    quota_path = profile_path / 'QuotaManager'
+                    if quota_path.exists():
+                        self.safe_remove(str(quota_path), f"{browser_name}/{profile} Quota Manager")
+                    
+                    # 32. Storage Quota
+                    storage_quota_path = profile_path / 'Storage'
+                    if storage_quota_path.exists():
+                        self.safe_remove(str(storage_quota_path), f"{browser_name}/{profile} Storage")
+                    
+                    # ============= MISC DATABASES =============
+                    # 33. All .db and .sqlite files
+                    for db_file in profile_path.glob('*.db'):
+                        if db_file.is_file():
+                            self.safe_remove(str(db_file), f"{browser_name}/{profile} {db_file.name}")
+                    
+                    for sqlite_file in profile_path.glob('*.sqlite'):
+                        if sqlite_file.is_file():
+                            self.safe_remove(str(sqlite_file), f"{browser_name}/{profile} {sqlite_file.name}")
+                    
+                    # 34. All -journal files
+                    for journal_file in profile_path.glob('*-journal'):
+                        if journal_file.is_file():
+                            self.safe_remove(str(journal_file), f"{browser_name}/{profile} {journal_file.name}")
+                    
+                    # ============= LOGS =============
+                    # 35. Log Files
+                    for log_file in profile_path.glob('*.log'):
+                        if log_file.is_file():
+                            self.safe_remove(str(log_file), f"{browser_name}/{profile} {log_file.name}")
+                    
+                    # ============= ADDITIONAL CLEANUP (Fingerprinting & Tracking) =============
+                    # 36. GPUCache (separate from regular Cache)
+                    gpu_cache_path = profile_path / 'GPUCache'
+                    if gpu_cache_path.exists():
+                        self.safe_remove(str(gpu_cache_path), f"{browser_name}/{profile} GPUCache")
+                    
+                    # 37. GCM Store (Google Cloud Messaging)
+                    gcm_store_path = profile_path / 'GCM Store'
+                    if gcm_store_path.exists():
+                        self.safe_remove(str(gcm_store_path), f"{browser_name}/{profile} GCM Store")
+                    
+                    # 38. BudgetDatabase (background sync budgets)
+                    budget_db_path = profile_path / 'BudgetDatabase'
+                    if budget_db_path.exists():
+                        self.safe_remove(str(budget_db_path), f"{browser_name}/{profile} BudgetDatabase")
+                    
+                    # 39. databases (WebSQL databases)
+                    databases_path = profile_path / 'databases'
+                    if databases_path.exists():
+                        self.safe_remove(str(databases_path), f"{browser_name}/{profile} WebSQL databases")
+                    
+                    # 40. WebStorage (additional storage)
+                    webstorage_path = profile_path / 'WebStorage'
+                    if webstorage_path.exists():
+                        self.safe_remove(str(webstorage_path), f"{browser_name}/{profile} WebStorage")
+                    
+                    # 41. Service Worker/Database (if not already covered)
+                    sw_db_path = profile_path / 'Service Worker/Database'
+                    if sw_db_path.exists():
+                        self.safe_remove(str(sw_db_path), f"{browser_name}/{profile} SW Database")
+                    
+                    # 42. shared_proto_db (shared database for various features)
+                    shared_proto_path = profile_path / 'shared_proto_db'
+                    if shared_proto_path.exists():
+                        self.safe_remove(str(shared_proto_path), f"{browser_name}/{profile} shared_proto_db")
+                    
+                    # 43. optimization_guide_hint_cache_store (optimization hints)
+                    opt_guide_path = profile_path / 'optimization_guide_hint_cache_store'
+                    if opt_guide_path.exists():
+                        self.safe_remove(str(opt_guide_path), f"{browser_name}/{profile} optimization_guide")
+                    
+                    # 44. optimization_guide_model_and_features_store
+                    opt_model_path = profile_path / 'optimization_guide_model_and_features_store'
+                    if opt_model_path.exists():
+                        self.safe_remove(str(opt_model_path), f"{browser_name}/{profile} optimization_model")
+                    
+                    # 45. Site Characteristics Database
+                    site_chars_path = profile_path / 'Site Characteristics Database'
+                    if site_chars_path.exists():
+                        self.safe_remove(str(site_chars_path), f"{browser_name}/{profile} Site Characteristics")
+                    
+                    # 46. Heavy Ad Intervention Opt Out
+                    heavy_ad_path = profile_path / 'Heavy Ad Intervention Opt Out'
+                    if heavy_ad_path.exists():
+                        self.safe_remove(str(heavy_ad_path), f"{browser_name}/{profile} Heavy Ad Intervention")
+                    
+                    # 47. MediaDeviceSalts (device identification)
+                    media_salts_path = profile_path / 'MediaDeviceSalts'
+                    if media_salts_path.exists():
+                        self.safe_remove(str(media_salts_path), f"{browser_name}/{profile} MediaDeviceSalts")
+                    
+                    # 48. Network Action Predictor-journal
+                    nap_journal_path = profile_path / 'Network Action Predictor-journal'
+                    if nap_journal_path.exists():
+                        self.safe_remove(str(nap_journal_path), f"{browser_name}/{profile} NAP-journal")
+                    
+                    # 49. Favicons (favicon cache)
+                    favicons_path = profile_path / 'Favicons'
+                    if favicons_path.exists():
+                        self.safe_remove(str(favicons_path), f"{browser_name}/{profile} Favicons")
+                    
+                    # 50. Favicons-journal
+                    favicons_journal_path = profile_path / 'Favicons-journal'
+                    if favicons_journal_path.exists():
+                        self.safe_remove(str(favicons_journal_path), f"{browser_name}/{profile} Favicons-journal")
+                    
+                    # 51. VideoDecodeStats (hardware decode stats)
+                    video_stats_path = profile_path / 'VideoDecodeStats'
+                    if video_stats_path.exists():
+                        self.safe_remove(str(video_stats_path), f"{browser_name}/{profile} VideoDecodeStats")
+                    
+                    # 52. DIPS (Bounce Tracking Mitigations)
+                    dips_path = profile_path / 'DIPS'
+                    if dips_path.exists():
+                        self.safe_remove(str(dips_path), f"{browser_name}/{profile} DIPS")
+                    
+                    # 53. Segmentation Platform (user segmentation)
+                    seg_platform_path = profile_path / 'Segmentation Platform'
+                    if seg_platform_path.exists():
+                        self.safe_remove(str(seg_platform_path), f"{browser_name}/{profile} Segmentation Platform")
+                    
+                    # 54. Trust Tokens (privacy sandbox)
+                    trust_tokens_path = profile_path / 'Trust Tokens'
+                    if trust_tokens_path.exists():
+                        self.safe_remove(str(trust_tokens_path), f"{browser_name}/{profile} Trust Tokens")
+                    
+                    # 55. WebRTC Logs (WebRTC connection logs)
+                    webrtc_logs_path = profile_path / 'WebRTC Logs'
+                    if webrtc_logs_path.exists():
+                        self.safe_remove(str(webrtc_logs_path), f"{browser_name}/{profile} WebRTC Logs")
+                    
+                    # 56. Feature Engagement Tracker (user engagement tracking)
+                    fet_path = profile_path / 'Feature Engagement Tracker'
+                    if fet_path.exists():
+                        self.safe_remove(str(fet_path), f"{browser_name}/{profile} Feature Engagement Tracker")
+                    
+                    # 57. Download Metadata (download history metadata)
+                    download_meta_path = profile_path / 'Download Metadata'
+                    if download_meta_path.exists():
+                        self.safe_remove(str(download_meta_path), f"{browser_name}/{profile} Download Metadata")
+                    
+                    # 58. Crash Reports (crash report data)
+                    crash_path = profile_path / 'Crash Reports'
+                    if crash_path.exists():
+                        self.safe_remove(str(crash_path), f"{browser_name}/{profile} Crash Reports")
+                    
+                    # 59. AutofillStrikeDatabase (autofill learning)
+                    autofill_strike_path = profile_path / 'AutofillStrikeDatabase'
+                    if autofill_strike_path.exists():
+                        self.safe_remove(str(autofill_strike_path), f"{browser_name}/{profile} AutofillStrikeDatabase")
+                    
+                    # 60. All ldb files (LevelDB files)
+                    for ldb_file in profile_path.glob('*.ldb'):
+                        if ldb_file.is_file():
+                            self.safe_remove(str(ldb_file), f"{browser_name}/{profile} {ldb_file.name}")
+                    
+                    # 61. All .bak files (backup files)
+                    for bak_file in profile_path.glob('*.bak'):
+                        if bak_file.is_file():
+                            self.safe_remove(str(bak_file), f"{browser_name}/{profile} {bak_file.name}")
+                    
+                    # 62. All LOCK files (database lock files)
+                    for lock_file in profile_path.glob('**/LOCK'):
+                        if lock_file.is_file():
+                            self.safe_remove(str(lock_file), f"{browser_name}/{profile} {lock_file.name}")
 
-                # Method 2: Clean ALL IndexedDB
-                indexeddb_patterns = [
-                    'Default/IndexedDB',
-                    'Profile */IndexedDB',
-                ]
-                for idb_pattern in indexeddb_patterns:
-                    for idb_dir in browser_path.glob(idb_pattern):
-                        if idb_dir.is_dir():
-                            self.safe_remove(str(idb_dir), f"{browser_name} IndexedDB (ALL)")
-
-                # Method 3: Clean ALL Session Storage
-                session_storage_patterns = [
-                    'Default/Session Storage',
-                    'Profile */Session Storage',
-                ]
-                for ss_pattern in session_storage_patterns:
-                    for ss_dir in browser_path.glob(ss_pattern):
-                        if ss_dir.is_dir():
-                            self.safe_remove(str(ss_dir), f"{browser_name} Session Storage (ALL)")
-
-                # Method 4: Clean ALL Cache
-                cache_patterns = [
-                    'Default/Cache',
-                    'Default/Code Cache',
-                    'Default/GPUCache',
-                    'Profile */Cache',
-                    'Profile */Code Cache',
-                    'Profile */GPUCache',
+                # Also clean browser root level items (outside profiles)
+                root_items = [
                     'ShaderCache',
+                    'GrShaderCache',
+                    'BrowserMetrics',
+                    'Crash Reports',
+                    'Safe Browsing',
+                    'Local State',  # Browser-wide state
+                    'First Run',
+                    'component_crx_cache',  # Component extensions cache
+                    'Consent To Send Stats',
+                    'Webstore Downloads',
+                    'Module Info Cache',
+                    'SSLErrorAssistant',
+                    'OriginTrials',
+                    'Subresource Filter',
+                    'MEIPreload',  # Media engagement preload
+                    'CertificateRevocation',
+                    'FileTypePolicies',
+                    'OnDeviceHeadSuggestModel',
+                    'Safe Browsing Channel',
+                    'EVWhitelist',
                 ]
-                for cache_pattern in cache_patterns:
-                    for cache_dir in browser_path.glob(cache_pattern):
-                        if cache_dir.is_dir():
-                            self.safe_remove(str(cache_dir), f"{browser_name} Cache (ALL)")
+                for root_item in root_items:
+                    root_path = browser_path / root_item
+                    if root_path.exists():
+                        self.safe_remove(str(root_path), f"{browser_name} {root_item}")
+                
+                # Clean all browser-wide database files
+                for root_db in browser_path.glob('*.db'):
+                    if root_db.is_file():
+                        self.safe_remove(str(root_db), f"{browser_name} {root_db.name}")
+                
+                for root_sqlite in browser_path.glob('*.sqlite'):
+                    if root_sqlite.is_file():
+                        self.safe_remove(str(root_sqlite), f"{browser_name} {root_sqlite.name}")
 
-                # Method 5: Clean ALL Cookies
-                cookie_patterns = [
-                    'Default/Cookies',
-                    'Default/Cookies-journal',
-                    'Default/Network/Cookies',
-                    'Profile */Cookies',
-                    'Profile */Cookies-journal',
-                    'Profile */Network/Cookies',
-                ]
-                for cookie_pattern in cookie_patterns:
-                    for cookie_file in browser_path.glob(cookie_pattern):
-                        if cookie_file.exists():
-                            self.safe_remove(str(cookie_file), f"{browser_name} Cookies (ALL)")
-
-                # Method 6: Clean ALL Service Workers
-                sw_patterns = [
-                    'Default/Service Worker',
-                    'Profile */Service Worker',
-                ]
-                for sw_pattern in sw_patterns:
-                    for sw_dir in browser_path.glob(sw_pattern):
-                        if sw_dir.is_dir():
-                            self.safe_remove(str(sw_dir), f"{browser_name} Service Worker (ALL)")
-
-                # Method 7: Clean History
-                history_patterns = [
-                    'Default/History',
-                    'Default/History-journal',
-                    'Profile */History',
-                    'Profile */History-journal',
-                ]
-                for history_pattern in history_patterns:
-                    for history_file in browser_path.glob(history_pattern):
-                        if history_file.exists():
-                            self.safe_remove(str(history_file), f"{browser_name} History (ALL)")
-
-                # Method 8: Clean Download History
-                download_patterns = [
-                    'Default/History',
-                    'Profile */History',
-                ]
-                # Already covered in History cleanup above
-
-                # Method 9: Clean Web Data (Autofill, etc.)
-                webdata_patterns = [
-                    'Default/Web Data',
-                    'Default/Web Data-journal',
-                    'Profile */Web Data',
-                    'Profile */Web Data-journal',
-                ]
-                for webdata_pattern in webdata_patterns:
-                    for webdata_file in browser_path.glob(webdata_pattern):
-                        if webdata_file.exists():
-                            self.safe_remove(str(webdata_file), f"{browser_name} Web Data (ALL)")
-
-                # Method 10: Clean Preferences (complete reset)
-                pref_patterns = [
-                    'Default/Preferences',
-                    'Profile */Preferences',
-                    'Default/Secure Preferences',
-                    'Profile */Secure Preferences',
-                ]
-                for pref_pattern in pref_patterns:
-                    for pref_file in browser_path.glob(pref_pattern):
-                        if pref_file.exists():
-                            self.safe_remove(str(pref_file), f"{browser_name} Preferences (ALL)")
-
-                # Method 11: Clean Sessions
-                session_patterns = [
-                    'Default/Sessions',
-                    'Profile */Sessions',
-                    'Default/Current Session',
-                    'Default/Current Tabs',
-                    'Profile */Current Session',
-                    'Profile */Current Tabs',
-                ]
-                for session_pattern in session_patterns:
-                    for session_item in browser_path.glob(session_pattern):
-                        if session_item.exists():
-                            self.safe_remove(str(session_item), f"{browser_name} Sessions (ALL)")
-
-                # Method 12: Clean Media Cache
-                media_cache_patterns = [
-                    'Default/Media Cache',
-                    'Profile */Media Cache',
-                ]
-                for media_pattern in media_cache_patterns:
-                    for media_dir in browser_path.glob(media_pattern):
-                        if media_dir.is_dir():
-                            self.safe_remove(str(media_dir), f"{browser_name} Media Cache (ALL)")
-
-                self.print_emoji("✅", f"{browser_name}: Complete data wipe finished")
+                self.print_emoji("✅", f"{browser_name}: 100% ULTRA-COMPLETE data wipe finished (62+ data types)")
 
             except Exception as e:
                 self.print_emoji("⚠️", f"{browser_name} cleanup warning: {e}")
