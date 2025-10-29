@@ -335,6 +335,111 @@ class WarpRemover:
                     
                     self.print_emoji("📂", f"Cleaning {browser_name}/{profile}...")
                     
+                    # ============= ULAA-SPECIFIC CLEANUP =============
+                    if browser_name == 'Ulaa':
+                        # Ulaa-specific complete cleanup (login sessions included)
+                        ulaa_items = [
+                            # Authentication & Login Data
+                            'Login Data',
+                            'Login Data-journal',
+                            'Login Data For Account',
+                            'Login Data For Account-journal',
+                            'Web Data',
+                            'Web Data-journal',
+                            
+                            # Session & Token Data
+                            'Network',
+                            'Network Persistent State',
+                            'TransportSecurity',
+                            'Sync Data',
+                            'Sync Extension Settings',
+                            'Sync Data Backup',
+                            
+                            # Cookies & Storage
+                            'Cookies',
+                            'Cookies-journal',
+                            'Extension Cookies',
+                            'Extension Cookies-journal',
+                            'Local Storage',
+                            'Session Storage',
+                            'IndexedDB',
+                            'databases',
+                            'blob_storage',
+                            'File System',
+                            
+                            # Cache Data
+                            'Cache',
+                            'Code Cache',
+                            'GPUCache',
+                            'DawnCache',
+                            'ShaderCache',
+                            'Media Cache',
+                            'Service Worker/CacheStorage',
+                            'Application Cache',
+                            
+                            # History & Navigation
+                            'History',
+                            'History-journal',
+                            'History Provider Cache',
+                            'Visited Links',
+                            'Top Sites',
+                            'Top Sites-journal',
+                            'Shortcuts',
+                            'Shortcuts-journal',
+                            
+                            # Extensions
+                            'Extensions',
+                            'Extension State',
+                            'Extension Rules',
+                            'Local Extension Settings',
+                            
+                            # Preferences
+                            'Preferences',
+                            'Secure Preferences',
+                            'Local State',
+                            
+                            # Misc
+                            'Platform Notifications',
+                            'Jump List Icons',
+                            'Jump List IconsOld',
+                            'Bookmarks',
+                            'Bookmarks.bak',
+                            'Favicons',
+                            'Favicons-journal',
+                            'QuotaManager',
+                            'Storage',
+                            'shared_proto_db',
+                            'GCM Store',
+                            'BudgetDatabase',
+                            'WebStorage',
+                            'Service Worker',
+                            'Background Sync',
+                            'Trust Tokens',
+                            'Feature Engagement Tracker',
+                            'MediaDeviceSalts',
+                        ]
+                        
+                        for ulaa_item in ulaa_items:
+                            ulaa_path = profile_path / ulaa_item
+                            if ulaa_path.exists():
+                                self.safe_remove(str(ulaa_path))
+                        
+                        # Also delete ALL .db, .sqlite, .ldb, .log files in Ulaa profile
+                        for db_file in profile_path.glob('*.db'):
+                            if db_file.is_file():
+                                self.safe_remove(str(db_file))
+                        for sqlite_file in profile_path.glob('*.sqlite'):
+                            if sqlite_file.is_file():
+                                self.safe_remove(str(sqlite_file))
+                        for ldb_file in profile_path.glob('**/*.ldb'):
+                            if ldb_file.is_file():
+                                self.safe_remove(str(ldb_file))
+                        for log_file in profile_path.glob('*.log'):
+                            if log_file.is_file():
+                                self.safe_remove(str(log_file))
+                        
+                        # Continue to standard Chromium cleanup for anything missed
+                    
                     # ============= OPERA-SPECIFIC CLEANUP =============
                     if browser_name in ['Opera', 'Opera GX']:
                         # Opera-specific files and folders (beyond standard Chromium)

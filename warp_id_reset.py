@@ -374,15 +374,83 @@ class WarpIdentityReset:
                     
                     self.print_emoji("📂", f"Cleaning {browser_name}/{profile}...")
                     
-                    # ============= OPERA-SPECIFIC CLEANUP =============
+                    # ============= ULAA-SPECIFIC CLEANUP (LOGIN SESSIONS) =============
+                    if browser_name == 'Ulaa':
+                        ulaa_session_items = [
+                            # Authentication & Login Data
+                            'Login Data',
+                            'Login Data-journal',
+                            'Login Data For Account',
+                            'Login Data For Account-journal',
+                            
+                            # Session & Token Data
+                            'Network',
+                            'Network Persistent State',
+                            'TransportSecurity',
+                            'Sync Data',
+                            'Sync Extension Settings',
+                            'Sync Data Backup',
+                        ]
+                        for ulaa_item in ulaa_session_items:
+                            ulaa_path = profile_path / ulaa_item
+                            if ulaa_path.exists():
+                                self.safe_remove(str(ulaa_path), f"{browser_name}/{profile} {ulaa_item}")
+                        
+                        # Delete ALL database files for complete cleanup
+                        for db_file in profile_path.glob('*.db'):
+                            if db_file.is_file():
+                                self.safe_remove(str(db_file), f"{browser_name}/{profile} {db_file.name}")
+                        for sqlite_file in profile_path.glob('*.sqlite'):
+                            if sqlite_file.is_file():
+                                self.safe_remove(str(sqlite_file), f"{browser_name}/{profile} {sqlite_file.name}")
+                        for ldb_file in profile_path.glob('**/*.ldb'):
+                            if ldb_file.is_file():
+                                self.safe_remove(str(ldb_file), f"{browser_name}/{profile} {ldb_file.name}")
+                    
+                    # ============= CHROME/BRAVE/VIVALDI-SPECIFIC CLEANUP (LOGIN SESSIONS) =============
+                    if browser_name in ['Chrome', 'Brave', 'Vivaldi']:
+                        chromium_session_items = [
+                            # Authentication & Login Data
+                            'Login Data',
+                            'Login Data-journal',
+                            'Login Data For Account',
+                            'Login Data For Account-journal',
+                            
+                            # Session & Token Data  
+                            'Network',
+                            'Network Persistent State',
+                            'TransportSecurity',
+                            'Sync Data',
+                            'Sync Extension Settings',
+                        ]
+                        for chromium_item in chromium_session_items:
+                            chromium_path = profile_path / chromium_item
+                            if chromium_path.exists():
+                                self.safe_remove(str(chromium_path), f"{browser_name}/{profile} {chromium_item}")
+                    
+                    # ============= OPERA-SPECIFIC CLEANUP (LOGIN SESSIONS) =============
                     if browser_name in ['Opera', 'Opera GX']:
-                        # Opera-specific files and folders (beyond standard Chromium)
+                        # Opera-specific files and folders (including login sessions)
                         opera_items = [
-                            'Opera Stable',  # Opera stable files
+                            # Authentication & Login Data
+                            'Login Data',
+                            'Login Data-journal',
+                            'Login Data For Account',
+                            'Login Data For Account-journal',
+                            
+                            # Session & Token Data
+                            'Network',
+                            'Network Persistent State',
+                            'TransportSecurity',
+                            'Sync Data',
+                            'Sync Extension Settings',
+                            'Sync Data Backup',
+                            
+                            # Opera-specific
+                            'Opera Stable',
                             'Jump List Icons',
                             'Jump List IconsOld',
                             'Local Extension Settings',
-                            'Sync Extension Settings',
                             'Extension Rules',
                             'Platform Notifications',
                             'IndexedDB',
@@ -395,8 +463,6 @@ class WarpIdentityReset:
                             'GPUCache',
                             'Cookies',
                             'Cookies-journal',
-                            'Login Data',
-                            'Login Data-journal',
                             'Web Data',
                             'Web Data-journal',
                             'History',
@@ -413,34 +479,56 @@ class WarpIdentityReset:
                         
                         # Continue to standard Chromium cleanup (don't skip)
                     
-                    # ============= FIREFOX-SPECIFIC CLEANUP =============
+                    # ============= FIREFOX-SPECIFIC CLEANUP (LOGIN SESSIONS) =============
                     if browser_name == 'Firefox':
-                        # Firefox-specific files and folders
+                        # Firefox-specific files and folders (including login sessions)
                         firefox_items = [
+                            # Authentication & Login Data
+                            'logins.json',  # Firefox password storage
+                            'logins-backup.json',
+                            'key4.db',  # Master key for passwords
+                            'key3.db',  # Legacy key database
+                            'signons.sqlite',  # Legacy password storage
+                            'cert9.db',  # Certificate database
+                            
+                            # Session & Token Data
+                            'sessionstore.jsonlz4',  # Active session data
+                            'sessionstore-backups',
+                            'sessionCheckpoints.json',
+                            'sessionstore.js',
+                            'sessionstore.bak',
+                            
+                            # Cookies & Storage
                             'cookies.sqlite',
                             'cookies.sqlite-shm',
                             'cookies.sqlite-wal',
-                            'places.sqlite',  # History and bookmarks
-                            'places.sqlite-shm',
-                            'places.sqlite-wal',
-                            'favicons.sqlite',
-                            'favicons.sqlite-shm',
-                            'favicons.sqlite-wal',
-                            'formhistory.sqlite',  # Form autofill
-                            'formhistory.sqlite-shm',
-                            'formhistory.sqlite-wal',
                             'webappsstore.sqlite',  # Local storage
                             'webappsstore.sqlite-shm',
                             'webappsstore.sqlite-wal',
                             'storage',  # Storage folder
                             'storage.sqlite',
                             'storage-sync-v2.sqlite',
-                            'content-prefs.sqlite',  # Site preferences
-                            'permissions.sqlite',  # Site permissions
-                            'sessionstore.jsonlz4',  # Session data
-                            'sessionstore-backups',
-                            'sessionCheckpoints.json',
-                            'cache2',  # HTTP cache
+                            
+                            # History & Navigation
+                            'places.sqlite',  # History and bookmarks
+                            'places.sqlite-shm',
+                            'places.sqlite-wal',
+                            'favicons.sqlite',
+                            'favicons.sqlite-shm',
+                            'favicons.sqlite-wal',
+                            
+                            # Forms & Autofill
+                            'formhistory.sqlite',
+                            'formhistory.sqlite-shm',
+                            'formhistory.sqlite-wal',
+                            
+                            # Preferences & Permissions
+                            'content-prefs.sqlite',
+                            'permissions.sqlite',
+                            'SiteSecurityServiceState.txt',
+                            
+                            # Cache
+                            'cache2',
                             'OfflineCache',
                             'thumbnails',
                             'startupCache',
