@@ -230,15 +230,17 @@ chmod +x linux_reset.sh linux_remove.sh
 
 ## 🌐 Browser Data Cleanup (Windows)
 
-**Both tools automatically clean Warp data from 6 major browsers:**
+**Both tools automatically clean Warp data from 8 major browsers:**
 
 ### Supported Browsers
 - ✅ Google Chrome
 - ✅ Mozilla Firefox  
 - ✅ Brave Browser
 - ✅ Opera
+- ✅ Opera GX
 - ✅ Vivaldi
 - ✅ Ulaa Browser
+- ✅ Zoho Browser
 
 ### 7 Cleanup Methods
 

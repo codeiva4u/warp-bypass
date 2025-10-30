@@ -256,6 +256,7 @@ class WarpRemover:
                 'Opera GX': appdata / 'Opera Software/Opera GX Stable',  # Opera GX variant
                 'Vivaldi': local_appdata / 'Vivaldi/User Data',
                 'Ulaa': local_appdata / 'Ulaa/User Data',
+                'Zoho': local_appdata / 'Zoho/Ulaa/User Data',  # Zoho Browser (uses Ulaa subfolder)
             }
             
         return browser_paths
@@ -277,6 +278,8 @@ class WarpRemover:
             'msedge.exe',
             'ulaa.exe',  # Ulaa browser
             'Ulaa.exe',  # Alternative naming
+            'zoho.exe',  # Zoho browser
+            'Zoho.exe',  # Alternative naming
         ]
         
         for browser in browsers_to_kill:
@@ -298,7 +301,7 @@ class WarpRemover:
             
         self.print_emoji("🌐", "Cleaning ALL browser data (ULTRA-COMPLETE wipe - browsers will be closed!)...")
         self.print_emoji("⚠️", "WARNING: This will delete 100% of ALL cookies, cache, sessions, storage, and browsing data!")
-        self.print_emoji("🔥", "Target browsers: Chrome, Firefox, Brave, Opera, Opera GX, Vivaldi, Ulaa")
+        self.print_emoji("🔥", "Target browsers: Chrome, Firefox, Brave, Opera, Opera GX, Vivaldi, Ulaa, Zoho")
         
         # Kill browsers first
         self.kill_browser_processes()
@@ -335,10 +338,10 @@ class WarpRemover:
                     
                     self.print_emoji("📂", f"Cleaning {browser_name}/{profile}...")
                     
-                    # ============= ULAA-SPECIFIC CLEANUP =============
-                    if browser_name == 'Ulaa':
-                        # Ulaa-specific complete cleanup (login sessions included)
-                        ulaa_items = [
+                    # ============= ULAA & ZOHO BROWSER COMPLETE CLEANUP =============
+                    if browser_name in ['Ulaa', 'Zoho']:
+                        # Complete cleanup for Ulaa/Zoho - Make browser like fresh install
+                        ulaa_zoho_items = [
                             # Authentication & Login Data
                             'Login Data',
                             'Login Data-journal',
@@ -417,26 +420,98 @@ class WarpRemover:
                             'Trust Tokens',
                             'Feature Engagement Tracker',
                             'MediaDeviceSalts',
+                            
+                            # COMPLETE FRESH INSTALL CLEANUP (NEW ADDITIONS)
+                            'Download Service',
+                            'DownloadService',
+                            'Reporting and NEL',
+                            'Safe Browsing',
+                            'optimization_guide',
+                            'Optimization Guide',
+                            'heavy_ad_intervention_opt_out.db',
+                            'AutofillStrikeDatabase',
+                            'coupon_db',
+                            'Network Action Predictor',
+                            'Affiliation Database',
+                            'Managed Extension Settings',
+                            'Extension State',
+                            'Extension Scripts',
+                            'Extensions',
+                            'Extension Rules',
+                            'local_ntp_doodles',
+                            'Sessions',
+                            'Current Session',
+                            'Current Tabs',
+                            'Last Session',
+                            'Last Tabs',
+                            'LOCK',
+                            'LOG',
+                            'LOG.old',
+                            'chrome_debug.log',
+                            'lockfile',
+                            
+                            # Origin Trials & Tokens
+                            'Origin Trials',
+                            'persisted_first_party_sets.json',
+                            'trust_token_database.db',
+                            
+                            # Site Characteristics
+                            'Site Characteristics Database',
+                            'VideoDecodeStats',
+                            'WebrtcVideoStats',
+                            'VideoDecodePerfHistory',
                         ]
                         
-                        for ulaa_item in ulaa_items:
+                        for ulaa_item in ulaa_zoho_items:
                             ulaa_path = profile_path / ulaa_item
                             if ulaa_path.exists():
                                 self.safe_remove(str(ulaa_path))
                         
-                        # Also delete ALL .db, .sqlite, .ldb, .log files in Ulaa profile
+                        # COMPLETE DATABASE & LOG CLEANUP (Make it like fresh install)
+                        self.print_emoji("🗄️", f"Deep cleaning {browser_name} databases and logs...")
+                        
+                        # Delete ALL database files
                         for db_file in profile_path.glob('*.db'):
                             if db_file.is_file():
                                 self.safe_remove(str(db_file))
+                        for db_file in profile_path.glob('*.db-journal'):
+                            if db_file.is_file():
+                                self.safe_remove(str(db_file))
+                        for db_file in profile_path.glob('*.db-shm'):
+                            if db_file.is_file():
+                                self.safe_remove(str(db_file))
+                        for db_file in profile_path.glob('*.db-wal'):
+                            if db_file.is_file():
+                                self.safe_remove(str(db_file))
+                                
+                        # Delete ALL sqlite files
                         for sqlite_file in profile_path.glob('*.sqlite'):
                             if sqlite_file.is_file():
                                 self.safe_remove(str(sqlite_file))
+                        for sqlite_file in profile_path.glob('*.sqlite-journal'):
+                            if sqlite_file.is_file():
+                                self.safe_remove(str(sqlite_file))
+                        for sqlite_file in profile_path.glob('*.sqlite-shm'):
+                            if sqlite_file.is_file():
+                                self.safe_remove(str(sqlite_file))
+                        for sqlite_file in profile_path.glob('*.sqlite-wal'):
+                            if sqlite_file.is_file():
+                                self.safe_remove(str(sqlite_file))
+                        
+                        # Delete ALL leveldb files (deep recursive)
                         for ldb_file in profile_path.glob('**/*.ldb'):
                             if ldb_file.is_file():
                                 self.safe_remove(str(ldb_file))
-                        for log_file in profile_path.glob('*.log'):
+                        for log_file in profile_path.glob('**/*.log'):
                             if log_file.is_file():
                                 self.safe_remove(str(log_file))
+                        
+                        # Delete Preferences completely (force fresh install state)
+                        for pref_file in profile_path.glob('*Preferences*'):
+                            if pref_file.is_file():
+                                self.safe_remove(str(pref_file))
+                        
+                        self.print_emoji("✨", f"{browser_name} cleaned to FRESH INSTALL state!")
                         
                         # Continue to standard Chromium cleanup for anything missed
                     
@@ -525,8 +600,57 @@ class WarpRemover:
                         # Continue to next profile as Firefox cleanup is done
                         continue
                     
-                    # ============= STORAGE DATA =============
-                    # 1. Local Storage (leveldb + all variants)
+                    # ============= COMPLETE FRESH INSTALL CLEANUP FOR ALL BROWSERS =============
+                    self.print_emoji("🧬", f"Making {browser_name}/{profile} like FRESH INSTALL...")
+                    
+                    # ============= FINGERPRINT & TRACKING REMOVAL =============
+                    fingerprint_items = [
+                        # Canvas & WebGL Fingerprinting
+                        'GPUCache',
+                        'DawnCache',
+                        'ShaderCache',
+                        'MediaDeviceSalts',
+                        'VideoDecodeStats',
+                        'WebrtcVideoStats',
+                        'VideoDecodePerfHistory',
+                        
+                        # Audio Fingerprinting
+                        'Media Cache',
+                        
+                        # Font Fingerprinting
+                        'FontLookupTableCache',
+                        
+                        # Device & Hardware Info
+                        'GCM Store',
+                        'Feature Engagement Tracker',
+                        'Site Characteristics Database',
+                        'Heavy Ad Intervention Opt Out',
+                        'Segmentation Platform',
+                        
+                        # Privacy Sandbox & Tracking
+                        'Trust Tokens',
+                        'DIPS',
+                        'Reporting and NEL',
+                        'Reporting and NEL-journal',
+                        'Topics',
+                        'persisted_first_party_sets.json',
+                        'Origin Trials',
+                        
+                        # Browser Profiling
+                        'optimization_guide_hint_cache_store',
+                        'optimization_guide_model_and_features_store',
+                        'Optimization Guide',
+                        'optimization_guide',
+                        'AutofillStrikeDatabase',
+                        'coupon_db',
+                    ]
+                    
+                    for fp_item in fingerprint_items:
+                        fp_path = profile_path / fp_item
+                        if fp_path.exists():
+                            self.safe_remove(str(fp_path))
+                    
+                    # ============= STORAGE DATA (COMPLETE) =============
                     storage_items = [
                         'Local Storage',
                         'Local Storage/leveldb',
@@ -657,37 +781,43 @@ class WarpRemover:
                         if session_path.exists():
                             self.safe_remove(str(session_path))
                     
-                    # ============= PREFERENCES & SETTINGS =============
-                    # 21. Preferences (all)
+                    # ============= PREFERENCES & SETTINGS (RESET TO DEFAULTS) =============
+                    # Complete preferences cleanup for fresh install feel
                     pref_items = [
                         'Preferences',
                         'Secure Preferences',
                         'Local State',
+                        'First Run',
+                        'First Run Sentinel',
                     ]
                     for pref_item in pref_items:
                         pref_path = profile_path / pref_item
                         if pref_path.exists():
                             self.safe_remove(str(pref_path))
                     
-                    # ============= EXTENSIONS =============
-                    # 22. Extensions (complete data)
+                    # ============= EXTENSIONS (COMPLETE REMOVAL) =============
                     ext_items = [
                         'Extensions',
                         'Extension Cookies',
                         'Extension Cookies-journal',
                         'Extension State',
                         'Extension Rules',
+                        'Extension Scripts',
+                        'Local Extension Settings',
+                        'Sync Extension Settings',
+                        'Managed Extension Settings',
                     ]
                     for ext_item in ext_items:
                         ext_path = profile_path / ext_item
                         if ext_path.exists():
                             self.safe_remove(str(ext_path))
                     
-                    # ============= SYNC & CLOUD =============
-                    # 23. Sync Data
+                    # ============= SYNC & CLOUD (COMPLETE RESET) =============
                     sync_items = [
                         'Sync Data',
                         'Sync Extension Settings',
+                        'Sync Data Backup',
+                        'Sync FileSystem',
                     ]
                     for sync_item in sync_items:
                         sync_path = profile_path / sync_item
@@ -705,10 +835,10 @@ class WarpRemover:
                         if bookmark_path.exists():
                             self.safe_remove(str(bookmark_path))
                     
-                    # ============= DOWNLOADS =============
-                    # 25. Download Metadata
+                    # ============= DOWNLOADS (COMPLETE HISTORY) =============
                     download_items = [
                         'Download Service',
+                        'DownloadService',
                         'Download Metadata',
                     ]
                     for download_item in download_items:
@@ -897,6 +1027,72 @@ class WarpRemover:
                     crash_path = profile_path / 'Crash Reports'
                     if crash_path.exists():
                         self.safe_remove(str(crash_path))
+                    
+                    # ============= FINAL DEEP CLEANUP (COMPLETE RESET) =============
+                    self.print_emoji("🧹", f"Final deep cleanup for {browser_name}/{profile}...")
+                    
+                    # Remove ALL .ldb files (leveldb)
+                    for ldb_file in profile_path.glob('**/*.ldb'):
+                        if ldb_file.is_file():
+                            self.safe_remove(str(ldb_file))
+                    
+                    # Remove ALL .log files recursively
+                    for log_file in profile_path.glob('**/*.log'):
+                        if log_file.is_file():
+                            self.safe_remove(str(log_file))
+                    
+                    # Remove ALL LOCK files
+                    for lock_file in profile_path.glob('**/LOCK'):
+                        if lock_file.is_file():
+                            self.safe_remove(str(lock_file))
+                    
+                    # Remove ALL manifest files
+                    for manifest_file in profile_path.glob('**/MANIFEST-*'):
+                        if manifest_file.is_file():
+                            self.safe_remove(str(manifest_file))
+                    
+                    # Remove ALL -wal and -shm files (SQLite)
+                    for wal_file in profile_path.glob('**/*-wal'):
+                        if wal_file.is_file():
+                            self.safe_remove(str(wal_file))
+                    for shm_file in profile_path.glob('**/*-shm'):
+                        if shm_file.is_file():
+                            self.safe_remove(str(shm_file))
+                    
+                    # Remove Jump List items (Windows)
+                    jump_items = [
+                        'Jump List Icons',
+                        'Jump List IconsOld',
+                    ]
+                    for jump_item in jump_items:
+                        jump_path = profile_path / jump_item
+                        if jump_path.exists():
+                            self.safe_remove(str(jump_path))
+                    
+                    # Remove Safe Browsing data
+                    safe_browsing_items = [
+                        'Safe Browsing',
+                        'Safe Browsing Cookies',
+                        'Safe Browsing Cookies-journal',
+                    ]
+                    for sb_item in safe_browsing_items:
+                        sb_path = profile_path / sb_item
+                        if sb_path.exists():
+                            self.safe_remove(str(sb_path))
+                    
+                    # Remove Login/Auth data (for fresh install feel)
+                    login_items = [
+                        'Login Data',
+                        'Login Data-journal',
+                        'Login Data For Account',
+                        'Login Data For Account-journal',
+                    ]
+                    for login_item in login_items:
+                        login_path = profile_path / login_item
+                        if login_path.exists():
+                            self.safe_remove(str(login_path))
+                    
+                    self.print_emoji("✨", f"{browser_name}/{profile} is now FRESH like new installation!")
                     
                     # 59. AutofillStrikeDatabase (autofill learning)
                     autofill_strike_path = profile_path / 'AutofillStrikeDatabase'
